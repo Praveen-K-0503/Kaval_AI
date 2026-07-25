@@ -1,0 +1,17 @@
+{
+  "service": "kaaval-ai-ksp-command-suite",
+  "stack": "custom_container",
+  "docker_build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "run": {
+    "port": 3000,
+    "memory": "2048MB",
+    "cpu": "1.0",
+    "env_variables": {
+      "NODE_ENV": "production",
+      "CATALYST_PROJECT_NAME": "Datathon2026_KSP"
+    }
+  }
+}
