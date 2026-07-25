@@ -3,5 +3,33 @@
   "project_key": "",
   "project_name": "KaavalAI-KSP",
   "platform": "nodejs",
-  "type": "Advanced"
+  "type": "Advanced",
+  "defaults": {
+    "project": 1,
+    "env": 1
+  },
+  "actives": {
+    "project": 1,
+    "env": 1
+  },
+  "projects": [
+    {
+      "idx": 1,
+      "id": "56816000000013052",
+      "name": "KaavalAI-KSP",
+      "domain": {
+        "id": "50044342834",
+        "name": "kaavalai-ksp-60080028417.development"
+      },
+      "timezone": "Asia/Kolkata",
+      "env": [
+        {
+          "idx": 1,
+          "id": "60080028417",
+          "name": "Development",
+          "type": 3
+        }
+      ]
+    }
+  ]
 }
