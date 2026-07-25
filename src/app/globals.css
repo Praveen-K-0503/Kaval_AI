@@ -5,8 +5,12 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #0b0f19;
+  --foreground: #f8fafc;
+  --ksp-gold: #eab308;
+  --ksp-blue: #3b82f6;
+  --ksp-red: #ef4444;
+  --ksp-green: #10b981;
 }
 
 body {
@@ -17,24 +21,58 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Executive Light Panels & Cards */
-.executive-light-panel {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+/* ── Tactical Dark Theme Glassmorphism Panels ────────────────────────── */
+.tactical-panel {
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(234, 179, 8, 0.15);
   border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 15px rgba(234, 179, 8, 0.05);
 }
 
-.executive-light-card {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+.tactical-card {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 0.75rem;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.executive-light-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+.tactical-card:hover {
+  border-color: rgba(234, 179, 8, 0.4);
+  box-shadow: 0 0 20px rgba(234, 179, 8, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Glow Utilities */
+.glow-gold {
+  box-shadow: 0 0 15px rgba(234, 179, 8, 0.35);
+}
+
+.glow-blue {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.35);
+}
+
+.glow-red {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+/* Pulsing Alert Indicator */
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+}
+
+.pulse-badge {
+  animation: pulseGlow 2s infinite ease-in-out;
 }
 
 /* Custom Scrollbar */
@@ -44,32 +82,33 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: #0f172a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #334155;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #eab308;
 }
 
-/* Leaflet map clean light overrides */
+/* Leaflet Dark Map Overrides */
 .leaflet-container {
-  background: #f8fafc !important;
+  background: #0f172a !important;
   font-family: inherit;
+  border-radius: 0.75rem;
 }
 
 .leaflet-popup-content-wrapper {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 10px !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid #eab308 !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
 }
 
 .leaflet-popup-tip {
-  background: #ffffff !important;
+  background: #1e293b !important;
 }

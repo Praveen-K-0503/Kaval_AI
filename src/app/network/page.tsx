@@ -3,218 +3,254 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { ArrowLeft, RefreshCw, Award, Network, Search } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  RefreshCw, 
+  Award, 
+  Network, 
+  Search, 
+  User, 
+  ShieldAlert, 
+  FileText, 
+  Layers, 
+  Maximize2,
+  Sliders,
+  ChevronRight,
+  UserX
+} from 'lucide-react';
+import { CRIMINAL_SYNDICATE_NODES, CriminalNode } from '@/lib/kspMockData';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API = process.env.NEXT_PUBLIC_API_URL || 'https://kaavalai-backend-50044342834.development.catalystappsail.in';
 
 const ForceGraph3D = dynamic(() => import('react-force-graph-3d'), {
   ssr: false,
   loading: () => (
-    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px', color: '#94a3b8', background: '#0f172a' }}>
-      <div style={{ width: '40px', height: '40px', border: '3px solid #1e293b', borderTopColor: '#7c3aed', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-      <span style={{ fontSize: '13px' }}>Loading 3D Graph Engine...</span>
+    <div className="h-full min-h-[500px] flex items-center justify-center flex-col gap-3 text-slate-400 bg-slate-950">
+      <div className="w-10 h-10 border-4 border-slate-800 border-t-yellow-400 rounded-full animate-spin" />
+      <span className="text-xs font-mono text-slate-300">Initializing 3D Syndicate Graph Engine...</span>
     </div>
   ),
 });
 
-const NODE_COLORS: Record<string, string> = {
-  Accused: '#ef4444',
-  FIR: '#3b82f6',
-  CrimeCategory: '#f59e0b',
+const ROLE_COLORS: Record<string, string> = {
+  GANG_LEADER: '#ef4444',   // Red
+  LIEUTENANT: '#f59e0b',    // Gold
+  OPERATIVE: '#3b82f6',     // Blue
+  ASSOCIATE: '#10b981',     // Green
 };
 
 export default function NetworkPage() {
   const graphRef = useRef<any>(null);
-  const [graphData, setGraphData] = useState<any>({ nodes: [], links: [] });
-  const [stats, setStats] = useState<any>(null);
-  const [ringleaders, setRingleaders] = useState<any[]>([]);
-  const [selected, setSelected] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [limit, setLimit] = useState(200);
+  const [selectedSyndicate, setSelectedSyndicate] = useState<string>('ALL');
+  const [selectedNode, setSelectedNode] = useState<CriminalNode | null>(CRIMINAL_SYNDICATE_NODES[0]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => { fetchData(); }, [limit]);
+  // Generate 3D graph representation from mock nodes & links
+  const graphData = React.useMemo(() => {
+    let filteredNodes = CRIMINAL_SYNDICATE_NODES;
+    if (selectedSyndicate !== 'ALL') {
+      filteredNodes = CRIMINAL_SYNDICATE_NODES.filter(n => n.syndicate === selectedSyndicate);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filteredNodes = filteredNodes.filter(n => 
+        n.name.toLowerCase().includes(q) || 
+        n.alias.toLowerCase().includes(q) || 
+        n.district.toLowerCase().includes(q)
+      );
+    }
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const d = await fetch(`${API}/api/ml/network-analysis?limit=${limit}`).then(r => r.json());
-      setGraphData({
-        nodes: (d.nodes || []).map((n: any) => ({
-          ...n,
-          color: n.is_ringleader ? '#8b5cf6' : NODE_COLORS[n.group] || '#94a3b8',
-          size: n.is_ringleader ? 10 : (n.group === 'CrimeCategory' ? 7 : 4),
-        })),
-        links: d.links || [],
+    const nodeIds = new Set(filteredNodes.map(n => n.id));
+    const links: { source: string; target: string; value: number }[] = [];
+
+    filteredNodes.forEach(node => {
+      node.connections.forEach(targetId => {
+        if (nodeIds.has(targetId)) {
+          links.push({ source: node.id, target: targetId, value: 2 });
+        }
       });
-      setStats(d.graph_stats);
-      setRingleaders(d.top_ringleaders || []);
-    } catch {}
-    setLoading(false);
-  };
+    });
 
-  const handleNodeClick = useCallback((node: any, _event: MouseEvent) => {
-    setSelected(node);
-    const d = 100;
-    const ratio = 1 + d / Math.hypot(node.x || 0, node.y || 0, node.z || 0);
-    graphRef.current?.cameraPosition(
-      { x: (node.x || 0) * ratio, y: (node.y || 0) * ratio, z: (node.z || 0) * ratio },
-      node, 1000
-    );
+    return {
+      nodes: filteredNodes.map(n => ({
+        ...n,
+        color: ROLE_COLORS[n.role] || '#94a3b8',
+        val: n.role === 'GANG_LEADER' ? 14 : n.role === 'LIEUTENANT' ? 10 : 6
+      })),
+      links
+    };
+  }, [selectedSyndicate, searchQuery]);
+
+  const handleNodeClick = useCallback((node: any) => {
+    setSelectedNode(node);
+    if (graphRef.current) {
+      const distance = 120;
+      const ratio = 1 + distance / Math.hypot(node.x || 0, node.y || 0, node.z || 0);
+      graphRef.current.cameraPosition(
+        { x: (node.x || 0) * ratio, y: (node.y || 0) * ratio, z: (node.z || 0) * ratio },
+        node,
+        1500
+      );
+    }
   }, []);
 
-  const filteredNodes = search
-    ? graphData.nodes.filter((n: any) => n.name?.toLowerCase().includes(search.toLowerCase()))
-    : [];
-
   return (
-    <div style={{ height: '100vh', background: '#0f172a', display: 'flex', flexDirection: 'column', fontFamily: "'Inter', sans-serif" }}>
-
-      {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', background: 'rgba(15,23,42,0.9)', borderBottom: '1px solid #1e293b', zIndex: 10, backdropFilter: 'blur(8px)' }}>
-        <Link href="/" style={{ color: '#64748b', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-          <ArrowLeft size={14} /> Dashboard
-        </Link>
-        <div style={{ width: '1px', height: '16px', background: '#1e293b' }} />
-        <Network size={16} color="#8b5cf6" />
-        <span style={{ color: '#e2e8f0', fontSize: '13px', fontWeight: 700 }}>Criminal Syndicate Network — 3D</span>
-
-        {/* Stats */}
-        {stats && (
-          <div style={{ display: 'flex', gap: '12px', marginLeft: '12px' }}>
-            {[
-              { v: stats.total_nodes, l: 'Nodes', c: '#8b5cf6' },
-              { v: stats.total_edges, l: 'Edges', c: '#3b82f6' },
-              { v: stats.accused_nodes, l: 'Suspects', c: '#ef4444' },
-              { v: stats.connected_components, l: 'Syndicates', c: '#f59e0b' },
-            ].map((s, i) => (
-              <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '14px', fontWeight: 800, color: s.c }}>{s.v}</div>
-                <div style={{ fontSize: '9px', color: '#64748b' }}>{s.l}</div>
-              </div>
-            ))}
+    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+      
+      {/* Header Bar */}
+      <header className="bg-slate-900/90 border-b border-yellow-500/20 px-6 py-3 flex items-center justify-between shadow-lg">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="p-2 bg-slate-800 hover:bg-slate-700 text-yellow-400 rounded-lg transition">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="text-lg font-extrabold text-white flex items-center gap-2">
+              <Network className="w-5 h-5 text-yellow-400" />
+              3D Criminal Syndicate Network Analyzer
+            </h1>
+            <p className="text-xs text-slate-400">
+              Karnataka State Police — Organised Crime Linkage Engine & Centrality Scoring
+            </p>
           </div>
-        )}
+        </div>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <div style={{ position: 'relative' }}>
-            <Search size={12} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search node..."
-              style={{ padding: '5px 8px 5px 24px', background: '#1e293b', border: '1px solid #334155', borderRadius: '6px', color: '#e2e8f0', fontSize: '11px', width: '140px', outline: 'none' }}
-            />
-          </div>
-          <select
-            value={limit}
-            onChange={e => setLimit(Number(e.target.value))}
-            style={{ padding: '5px 8px', background: '#1e293b', border: '1px solid #334155', borderRadius: '6px', color: '#e2e8f0', fontSize: '11px' }}
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+            Active Syndicate Nodes: <strong className="text-yellow-400">{graphData.nodes.length}</strong>
+          </span>
+          <button 
+            onClick={() => { setSelectedSyndicate('ALL'); setSearchQuery(''); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg border border-slate-700 transition"
           >
-            <option value={100}>100 nodes</option>
-            <option value={200}>200 nodes</option>
-            <option value={500}>500 nodes</option>
-          </select>
-          <button onClick={fetchData} style={{ padding: '5px 10px', background: '#1e293b', border: '1px solid #334155', borderRadius: '6px', color: '#94a3b8', cursor: 'pointer', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <RefreshCw size={11} /> Refresh
+            <RefreshCw className="w-3.5 h-3.5" />
+            Reset Camera
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Graph */}
-      <div style={{ flex: 1, position: 'relative' }}>
-        {!loading && graphData.nodes.length > 0 && (
+      {/* Main 3D Graph & Sidebar Layout */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 overflow-hidden">
+        
+        {/* Left Control Panel & Inspector */}
+        <div className="lg:col-span-1 border-r border-slate-800 bg-[#0f172a]/95 p-5 space-y-6 overflow-y-auto">
+          
+          {/* Search Box */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-300 tracking-wide flex items-center gap-1.5">
+              <Search className="w-3.5 h-3.5 text-yellow-400" />
+              SEARCH CRIMINAL SUSPECT
+            </label>
+            <input
+              type="text"
+              placeholder="Search name, alias, or district..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none focus:border-yellow-400"
+            />
+          </div>
+
+          {/* Syndicate Filter */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-300 tracking-wide flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-yellow-400" />
+              SELECT SYNDICATE NETWORK
+            </label>
+            <div className="grid grid-cols-1 gap-1.5">
+              {[
+                { id: 'ALL', label: 'All Criminal Syndicates' },
+                { id: 'D-Gang South Syndicate', label: 'D-Gang South Syndicate' },
+                { id: 'Kaveri Sand Mafia', label: 'Kaveri Sand Mafia' },
+                { id: 'Cyber Fraud Syndicate', label: 'Cyber Fraud Syndicate' },
+              ].map(syn => (
+                <button
+                  key={syn.id}
+                  onClick={() => setSelectedSyndicate(syn.id)}
+                  className={`px-3 py-2 text-xs font-semibold rounded-lg text-left transition flex items-center justify-between ${
+                    selectedSyndicate === syn.id 
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' 
+                      : 'bg-slate-900/60 text-slate-400 border border-slate-800 hover:bg-slate-800'
+                  }`}
+                >
+                  <span>{syn.label}</span>
+                  {selectedSyndicate === syn.id && <ChevronRight className="w-3.5 h-3.5 text-yellow-400" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Role Color Legend */}
+          <div className="tactical-card p-4 space-y-2">
+            <h4 className="text-xs font-bold text-slate-300 tracking-wider">HIERARCHY LEGEND</h4>
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500" /><span className="text-slate-300">Gang Leader</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-500" /><span className="text-slate-300">Lieutenant</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /><span className="text-slate-300">Operative</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-slate-300">Associate</span></div>
+            </div>
+          </div>
+
+          {/* Selected Suspect Detailed Inspector Card */}
+          {selectedNode && (
+            <div className="tactical-panel p-4 space-y-3 border-yellow-500/40 glow-gold animate-fadeIn">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-yellow-400" />
+                  <h3 className="text-sm font-bold text-white">SUSPECT PROFILE DOSSIER</h3>
+                </div>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  selectedNode.status === 'WANTED' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
+                  selectedNode.status === 'IN_CUSTODY' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
+                  'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
+                }`}>
+                  {selectedNode.status}
+                </span>
+              </div>
+
+              <div className="space-y-1.5 text-xs">
+                <div><span className="text-slate-400">Full Name:</span> <strong className="text-white font-semibold">{selectedNode.name}</strong></div>
+                <div><span className="text-slate-400">Alias:</span> <span className="text-yellow-400 font-mono font-bold">"{selectedNode.alias}"</span></div>
+                <div><span className="text-slate-400">Syndicate:</span> <span className="text-slate-200">{selectedNode.syndicate}</span></div>
+                <div><span className="text-slate-400">Jurisdiction:</span> <span className="text-slate-200">{selectedNode.district}</span></div>
+                <div><span className="text-slate-400">Risk Score:</span> <span className="text-red-400 font-mono font-extrabold">{selectedNode.riskScore} / 100</span></div>
+                <div><span className="text-slate-400">Active FIRs:</span> <span className="text-slate-200 font-semibold">{selectedNode.activeCases} Cases</span></div>
+                <div className="pt-1"><span className="text-slate-400 block mb-0.5">Primary Modus Operandi:</span>
+                  <p className="bg-slate-900 p-2 rounded text-[11px] text-slate-300 font-mono border border-slate-800">
+                    {selectedNode.mo}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* Right 3D Force Graph Workspace */}
+        <div className="lg:col-span-3 bg-slate-950 relative">
           <ForceGraph3D
             ref={graphRef}
             graphData={graphData}
-            nodeLabel={(n: any) => `${n.name}${n.composite_score ? ` · Score: ${n.composite_score}` : ''}`}
-            nodeColor={(n: any) => n.color}
-            nodeVal={(n: any) => n.size || 4}
-            linkColor={() => 'rgba(148,163,184,0.3)'}
-            linkWidth={(l: any) => Math.min(l.value || 1, 3)}
-            backgroundColor="#0f172a"
+            nodeLabel={(node: any) => `${node.name} ("${node.alias}") — ${node.role}`}
+            nodeColor={(node: any) => node.color}
+            nodeVal={(node: any) => node.val}
+            linkColor={() => 'rgba(234, 179, 8, 0.4)'}
+            linkWidth={1.5}
+            linkDirectionalParticles={2}
+            linkDirectionalParticleSpeed={0.005}
             onNodeClick={handleNodeClick}
-            showNavInfo={false}
-            d3AlphaDecay={0.02}
-            d3VelocityDecay={0.3}
+            backgroundColor="#0b0f19"
           />
-        )}
 
-        {loading && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ width: '40px', height: '40px', border: '3px solid #1e293b', borderTopColor: '#8b5cf6', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            <span style={{ color: '#64748b', fontSize: '13px' }}>Building criminal network graph...</span>
+          {/* Floating Instructions Tag */}
+          <div className="absolute bottom-4 right-4 bg-slate-900/90 border border-slate-800 backdrop-blur-md px-4 py-2 rounded-xl text-xs text-slate-400 flex items-center gap-3">
+            <span>🖱️ <strong>Left-Click + Drag:</strong> Rotate 3D View</span>
+            <span>Scroll: Zoom</span>
+            <span>Click Node: Inspect Profile</span>
           </div>
-        )}
-
-        {/* Search results */}
-        {search && filteredNodes.length > 0 && (
-          <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,23,42,0.95)', borderRadius: '8px', padding: '8px', maxHeight: '200px', overflowY: 'auto', minWidth: '240px', border: '1px solid #334155' }}>
-            {filteredNodes.slice(0, 8).map((n: any) => (
-              <div key={n.id} onClick={(e) => { handleNodeClick(n, e as unknown as MouseEvent); setSearch(''); }}
-                style={{ padding: '6px 10px', cursor: 'pointer', borderRadius: '4px', fontSize: '11px', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#1e293b')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: n.color }} />
-                {n.name}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Legend */}
-        <div style={{ position: 'absolute', bottom: '16px', left: '16px', background: 'rgba(15,23,42,0.85)', borderRadius: '8px', padding: '10px 14px', border: '1px solid #1e293b' }}>
-          {[
-            { c: '#8b5cf6', l: 'Ringleader' },
-            { c: '#ef4444', l: 'Suspect' },
-            { c: '#3b82f6', l: 'FIR Case' },
-            { c: '#f59e0b', l: 'Crime Type' },
-          ].map((i, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: i.c }} />
-              <span style={{ fontSize: '10px', color: '#94a3b8' }}>{i.l}</span>
-            </div>
-          ))}
         </div>
 
-        {/* Selected node */}
-        {selected && (
-          <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(15,23,42,0.92)', borderRadius: '10px', padding: '14px 16px', border: '1px solid #334155', minWidth: '200px' }}>
-            <div style={{ color: '#e2e8f0', fontSize: '12px', fontWeight: 700, marginBottom: '8px' }}>{selected.name}</div>
-            <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.8' }}>
-              <div>Type: <span style={{ color: '#e2e8f0' }}>{selected.group}</span></div>
-              {selected.pagerank !== undefined && <div>PageRank: <span style={{ color: '#a78bfa' }}>{selected.pagerank?.toFixed(6)}</span></div>}
-              {selected.betweenness !== undefined && <div>Betweenness: <span style={{ color: '#60a5fa' }}>{selected.betweenness?.toFixed(4)}</span></div>}
-              {selected.composite_score !== undefined && <div>Score: <span style={{ color: '#fbbf24' }}>{selected.composite_score}</span></div>}
-              {selected.is_ringleader && <div style={{ color: '#8b5cf6', fontWeight: 700, marginTop: '4px' }}>⭐ Top Ringleader</div>}
-            </div>
-            <button onClick={() => setSelected(null)} style={{ marginTop: '8px', background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: '11px' }}>✕ Close</button>
-          </div>
-        )}
-
-        {/* Top Ringleaders sidebar */}
-        {ringleaders.length > 0 && (
-          <div style={{ position: 'absolute', bottom: '16px', right: '16px', background: 'rgba(15,23,42,0.88)', borderRadius: '10px', padding: '12px', border: '1px solid #1e293b', minWidth: '220px', maxWidth: '240px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#a78bfa', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Award size={12} /> Top Ringleaders
-            </div>
-            {ringleaders.slice(0, 5).map((r, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', padding: '4px 6px', borderRadius: '6px', background: i === 0 ? 'rgba(139,92,246,0.15)' : 'transparent' }}>
-                <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: i === 0 ? '#8b5cf6' : '#334155', color: '#fff', fontSize: '9px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {r.rank}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#e2e8f0' }}>{r.name}</div>
-                  <div style={{ fontSize: '9px', color: '#64748b' }}>Score: {r.composite_score}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

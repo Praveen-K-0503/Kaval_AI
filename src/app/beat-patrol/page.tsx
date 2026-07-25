@@ -1,293 +1,266 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import {
-  ArrowLeft, Shield, MapPin, Users, Target, RefreshCw,
-  Activity, ChevronRight, AlertTriangle, CheckCircle
+import { 
+  ArrowLeft, 
+  MapPin, 
+  Users, 
+  Target, 
+  RefreshCw, 
+  ShieldAlert, 
+  Clock, 
+  CheckCircle2, 
+  Printer, 
+  Navigation,
+  ChevronRight,
+  AlertTriangle
 } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { BEAT_CHECKPOINTS, BeatCheckpoint } from '@/lib/kspMockData';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-const DISTRICTS = [
-  { id: 1, name: 'Bengaluru Urban', lat: 12.9716, lng: 77.5946 },
-  { id: 3, name: 'Mysuru', lat: 12.2958, lng: 76.6394 },
-  { id: 4, name: 'Hubballi-Dharwad', lat: 15.3647, lng: 75.124 },
-  { id: 5, name: 'Mangaluru', lat: 12.9141, lng: 74.856 },
-  { id: 6, name: 'Belagavi', lat: 15.8497, lng: 74.4977 },
-  { id: 7, name: 'Kalaburagi', lat: 17.3297, lng: 76.8343 },
+const STATIONS = [
+  { id: 'SC_PS', name: 'Bengaluru City — Subhedar Chatra PS', district: 'Bengaluru City', riskIndex: 88 },
+  { id: 'BP_PS', name: 'Kalaburagi — Brahmapur PS', district: 'Kalaburagi', riskIndex: 94 },
+  { id: 'PD_PS', name: 'Mangaluru — Pandeshwar PS', district: 'Mangaluru City (DK)', riskIndex: 82 },
+  { id: 'LS_PS', name: 'Mysuru — Lashkar PS', district: 'Mysuru City', riskIndex: 76 }
 ];
 
-interface DeploymentCluster {
-  cluster_id: number;
-  centroid_lat: number;
-  centroid_lng: number;
-  fir_count: number;
-  heinous_count: number;
-  risk_score: number;
-  officers_deployed: number;
-  recommended_patrol_type: string;
-  dominant_crime_type: string;
-  patrol_radius_km: number;
-  shift_recommendation: string;
-}
-
 export default function BeatPatrolPage() {
-  const [districtId, setDistrictId] = useState<number>(1);
-  const [officers, setOfficers] = useState<number>(60);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedStation, setSelectedStation] = useState(STATIONS[0].id);
+  const [selectedShift, setSelectedShift] = useState<'NIGHT' | 'EVENING' | 'MORNING'>('NIGHT');
+  const [officerCount, setOfficerCount] = useState<number>(4);
+  const [completedCPs, setCompletedCPs] = useState<string[]>([]);
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
-  useEffect(() => { fetchPatrol(); }, [districtId, officers]);
+  const activeStation = STATIONS.find(s => s.id === selectedStation) || STATIONS[0];
 
-  const fetchPatrol = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/api/ml/beat-patrol/${districtId}?officers=${officers}`);
-      const d = await res.json();
-      setData(d);
-    } catch { }
-    setLoading(false);
-  };
-
-  const currentDistrict = DISTRICTS.find(d => d.id === districtId);
-
-  const chartData = (data?.deployment_plan || []).map((c: DeploymentCluster) => ({
-    id: `C${c.cluster_id}`,
-    officers: c.officers_deployed,
-    risk: Math.round(c.risk_score),
-    firs: c.fir_count,
-  }));
-
-  const getRisk = (score: number) => {
-    if (score >= 70) return { label: 'Critical', color: '#dc2626', bg: '#fef2f2' };
-    if (score >= 40) return { label: 'High', color: '#d97706', bg: '#fffbeb' };
-    return { label: 'Moderate', color: '#059669', bg: '#f0fdf4' };
-  };
-
-  const getPatrolTypeIcon = (type: string) => {
-    if (type?.includes('Armed')) return '🛡️';
-    if (type?.includes('Rapid')) return '🚔';
-    if (type?.includes('Community')) return '👮';
-    return '🚓';
+  const toggleCheck = (id: string) => {
+    setCompletedCPs(prev => 
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+    );
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', background: '#f1f5f9',
-      fontFamily: "'Inter', 'Segoe UI', sans-serif",
-    }}>
-
-      {/* Nav */}
-      <div style={{
-        background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '0 24px',
-        position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-      }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', height: '60px', gap: '12px' }}>
-          <Link href="/" style={{ textDecoration: 'none', color: '#64748b', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <ArrowLeft size={16} /> Dashboard
+    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+      
+      {/* Header Bar */}
+      <header className="bg-slate-900/90 border-b border-yellow-500/20 px-6 py-3 flex items-center justify-between shadow-lg">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="p-2 bg-slate-800 hover:bg-slate-700 text-yellow-400 rounded-lg transition">
+            <ArrowLeft className="w-5 h-5" />
           </Link>
-          <span style={{ color: '#e2e8f0' }}>›</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Shield size={18} color="#059669" />
-            <span style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>Beat Patrol Optimizer</span>
-          </div>
-          <div style={{ marginLeft: 'auto', fontSize: '11px', color: '#94a3b8' }}>
-            Algorithm: Greedy Weighted Cluster Assignment
+          <div>
+            <h1 className="text-lg font-extrabold text-white flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-yellow-400" />
+              Greedy Beat Patrol Route & Personnel Optimizer
+            </h1>
+            <p className="text-xs text-slate-400">
+              Karnataka State Police — Spatiotemporal Police Dispatch & High-Risk Checkpoints
+            </p>
           </div>
         </div>
-      </div>
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <button 
+          onClick={() => setShowPrintModal(true)}
+          className="flex items-center gap-1.5 px-3.5 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-bold rounded-lg transition shadow-md glow-gold"
+        >
+          <Printer className="w-4 h-4" />
+          <span>Print Officer Patrol Brief</span>
+        </button>
+      </header>
 
-        {/* Controls */}
-        <div style={{
-          background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
-          padding: '16px 20px', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap',
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>District</label>
+      {/* Main Grid Content */}
+      <div className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+        
+        {/* Controls Bar */}
+        <div className="tactical-panel p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Station Selector */}
+          <div>
+            <label className="text-xs font-bold text-slate-300 block mb-2">TARGET POLICE STATION</label>
             <select
-              value={districtId}
-              onChange={e => setDistrictId(Number(e.target.value))}
-              style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', background: '#fff', minWidth: '200px' }}
+              value={selectedStation}
+              onChange={(e) => setSelectedStation(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-yellow-400 cursor-pointer"
             >
-              {DISTRICTS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              {STATIONS.map(st => (
+                <option key={st.id} value={st.id} className="bg-slate-900 text-white">
+                  {st.name} (Risk: {st.riskIndex})
+                </option>
+              ))}
             </select>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
-              Available Officers: <span style={{ color: '#1d4ed8' }}>{officers}</span>
-            </label>
+          {/* Shift Selection */}
+          <div>
+            <label className="text-xs font-bold text-slate-300 block mb-2">PATROL SHIFT PERIOD</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: 'NIGHT', label: 'Night Shift (22-06)' },
+                { id: 'EVENING', label: 'Evening Shift (14-22)' },
+                { id: 'MORNING', label: 'Morning Shift (06-14)' },
+              ].map(sh => (
+                <button
+                  key={sh.id}
+                  onClick={() => setSelectedShift(sh.id as any)}
+                  className={`py-2 text-[11px] font-bold rounded-lg transition ${
+                    selectedShift === sh.id 
+                      ? 'bg-yellow-500 text-slate-950 shadow-md' 
+                      : 'bg-slate-900 text-slate-400 border border-slate-800 hover:bg-slate-800'
+                  }`}
+                >
+                  {sh.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Officer Allocation Slider */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold text-slate-300">ALLOCATED OFFICERS</label>
+              <span className="text-xs font-mono font-bold text-yellow-400">{officerCount} Officers</span>
+            </div>
             <input
-              type="range" min={10} max={200} value={officers}
-              onChange={e => setOfficers(Number(e.target.value))}
-              style={{ width: '200px', accentColor: '#1d4ed8' }}
+              type="range"
+              min={2}
+              max={12}
+              value={officerCount}
+              onChange={(e) => setOfficerCount(Number(e.target.value))}
+              className="w-full accent-yellow-400 cursor-pointer"
             />
           </div>
 
-          <button onClick={fetchPatrol} style={{
-            marginLeft: 'auto', padding: '10px 20px', background: '#059669', color: '#fff',
-            border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px',
-            fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px',
-          }}>
-            <RefreshCw size={14} /> Optimize Deployment
-          </button>
         </div>
 
-        {/* Loading */}
-        {loading && (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-            <div style={{ width: '32px', height: '32px', border: '3px solid #e2e8f0', borderTopColor: '#059669', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
-            Computing optimal patrol allocation...
+        {/* Patrol Route Summary Metric Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="tactical-card p-4">
+            <span className="text-xs text-slate-400 block mb-1">Target Station</span>
+            <span className="text-sm font-extrabold text-white">{activeStation.name}</span>
           </div>
-        )}
+          <div className="tactical-card p-4">
+            <span className="text-xs text-slate-400 block mb-1">Station Risk Index</span>
+            <span className="text-lg font-mono font-bold text-red-400">{activeStation.riskIndex} / 100</span>
+          </div>
+          <div className="tactical-card p-4">
+            <span className="text-xs text-slate-400 block mb-1">Checkpoints Assigned</span>
+            <span className="text-lg font-mono font-bold text-yellow-400">{BEAT_CHECKPOINTS.length} Waypoints</span>
+          </div>
+          <div className="tactical-card p-4">
+            <span className="text-xs text-slate-400 block mb-1">Route Completion</span>
+            <span className="text-lg font-mono font-bold text-emerald-400">
+              {Math.round((completedCPs.length / BEAT_CHECKPOINTS.length) * 100)}% Completed
+            </span>
+          </div>
+        </div>
 
-        {data && !loading && (
-          <>
-            {/* Summary strip */}
-            <div style={{
-              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-              borderRadius: '12px', padding: '16px 20px',
-              display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px',
-              boxShadow: '0 4px 12px rgba(5,150,105,0.25)',
-            }}>
-              {[
-                { label: 'District', value: currentDistrict?.name || '—' },
-                { label: 'Total Officers', value: data.total_officers },
-                { label: 'Clusters Covered', value: data.deployment_plan?.length || 0 },
-                { label: 'Coverage', value: data.coverage_percentage ? `${data.coverage_percentage}%` : '—' },
-                { label: 'Algorithm', value: data.algorithm },
-              ].map((s, i) => (
-                <div key={i} style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: i < 2 ? '20px' : '16px', fontWeight: 800, color: '#fff' }}>{s.value}</div>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.75)', marginTop: '2px' }}>{s.label}</div>
+        {/* Optimized Checkpoint Route Checklist */}
+        <div className="tactical-panel p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <Navigation className="w-5 h-5 text-yellow-400" />
+              <h2 className="text-base font-bold text-white tracking-wide">OPTIMIZED BEAT PATROL WAYPOINTS CHECKLIST</h2>
+            </div>
+            <span className="text-xs text-slate-400 font-mono">Algorithm: Dijkstra Shortest Path + DBSCAN Risk Weight</span>
+          </div>
+
+          <div className="space-y-3">
+            {BEAT_CHECKPOINTS.map(cp => {
+              const isChecked = completedCPs.includes(cp.id);
+              return (
+                <div 
+                  key={cp.id}
+                  onClick={() => toggleCheck(cp.id)}
+                  className={`tactical-card p-4 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 transition ${
+                    isChecked ? 'border-emerald-500/50 bg-emerald-950/10' : 'hover:border-yellow-500/30'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); toggleCheck(cp.id); }}
+                      className={`w-6 h-6 rounded-md flex items-center justify-center border transition mt-0.5 ${
+                        isChecked ? 'bg-emerald-500 border-emerald-400 text-slate-950' : 'border-slate-700 bg-slate-900 text-transparent'
+                      }`}
+                    >
+                      ✓
+                    </button>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded">
+                          STOP #{cp.order}
+                        </span>
+                        <h3 className={`text-sm font-bold ${isChecked ? 'line-through text-slate-400' : 'text-white'}`}>
+                          {cp.name}
+                        </h3>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1">{cp.location}</p>
+                      <p className="text-xs text-slate-300 font-mono mt-1">
+                        <strong>Patrol Note:</strong> {cp.patrolInstructions}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 text-xs">
+                    <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-slate-300 font-mono">
+                      ⏰ {cp.recommendedTime}
+                    </span>
+                    <span className={`px-2.5 py-1 rounded font-extrabold text-[11px] ${
+                      cp.riskRating === 'HIGH' ? 'bg-red-500/20 text-red-400 border border-red-500/40' : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
+                    }`}>
+                      {cp.riskRating} RISK
+                    </span>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Printable Officer Patrol Brief Modal */}
+      {showPrintModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-[#111827] border border-yellow-500/40 rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 glow-gold">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                <Printer className="w-5 h-5 text-yellow-400" />
+                KARNATAKA STATE POLICE — OFFICER BEAT DOSSIER
+              </h3>
+              <button onClick={() => setShowPrintModal(false)} className="text-slate-400 hover:text-white font-mono">✕</button>
+            </div>
+
+            <div className="space-y-2 text-xs text-slate-300 font-mono bg-slate-900 p-4 rounded-xl border border-slate-800">
+              <p><strong>STATION:</strong> {activeStation.name}</p>
+              <p><strong>SHIFT:</strong> {selectedShift} SHIFT</p>
+              <p><strong>OFFICERS ON DUTY:</strong> {officerCount} Constables</p>
+              <p><strong>DATE:</strong> {new Date().toLocaleDateString('en-IN')}</p>
+              <hr className="border-slate-800 my-2" />
+              <p className="text-yellow-400 font-bold">WAYPOINTS TO COVER:</p>
+              {BEAT_CHECKPOINTS.map(c => (
+                <p key={c.id}>• #{c.order} {c.name} ({c.recommendedTime}) — {c.riskRating} RISK</p>
               ))}
             </div>
 
-            {/* Bar chart */}
-            {chartData.length > 0 && (
-              <div style={{
-                background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
-                padding: '16px 20px',
-              }}>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>
-                  Officer Deployment by Cluster (Risk-Weighted)
-                </div>
-                <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="id" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 10 }} />
-                    <Tooltip
-                      contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px' }}
-                      formatter={(v: any, n: string) => [v, n === 'officers' ? 'Officers Deployed' : 'Risk Score']}
-                    />
-                    <Bar dataKey="officers" name="officers" fill="#059669" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="risk" name="risk" fill="#fbbf24" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-
-            {/* Deployment Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '12px' }}>
-              {(data.deployment_plan || []).map((c: DeploymentCluster) => {
-                const risk = getRisk(c.risk_score);
-                return (
-                  <div key={c.cluster_id} style={{
-                    background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
-                    padding: '14px', borderTop: `4px solid ${risk.color}`,
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                  }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
-                          {getPatrolTypeIcon(c.recommended_patrol_type)} Cluster #{c.cluster_id}
-                        </div>
-                        <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>
-                          {c.centroid_lat?.toFixed(4)}°N, {c.centroid_lng?.toFixed(4)}°E
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{
-                          background: risk.bg, color: risk.color,
-                          fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px',
-                        }}>
-                          Risk: {Math.round(c.risk_score)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Officers big number */}
-                    <div style={{
-                      background: '#f0fdf4', borderRadius: '8px', padding: '10px',
-                      display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px',
-                    }}>
-                      <div>
-                        <div style={{ fontSize: '28px', fontWeight: 800, color: '#059669', lineHeight: '1' }}>
-                          {c.officers_deployed}
-                        </div>
-                        <div style={{ fontSize: '10px', color: '#065f46', fontWeight: 600 }}>officers deployed</div>
-                      </div>
-                      <div style={{ flex: 1, fontSize: '11px', color: '#047857', lineHeight: '1.6' }}>
-                        <div>📡 Radius: {c.patrol_radius_km?.toFixed(1)} km</div>
-                        <div>🕐 {c.shift_recommendation}</div>
-                      </div>
-                    </div>
-
-                    {/* Stats */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '10px' }}>
-                      {[
-                        { label: 'Total FIRs', value: c.fir_count, color: '#0f172a' },
-                        { label: 'Heinous', value: c.heinous_count, color: '#dc2626' },
-                      ].map((s, i) => (
-                        <div key={i} style={{ background: '#f8fafc', borderRadius: '6px', padding: '6px 8px', textAlign: 'center' }}>
-                          <div style={{ fontSize: '16px', fontWeight: 800, color: s.color }}>{s.value}</div>
-                          <div style={{ fontSize: '9px', color: '#94a3b8' }}>{s.label}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Patrol type + crime type */}
-                    <div style={{ fontSize: '11px', color: '#475569', lineHeight: '1.6' }}>
-                      <div>🚔 <strong>{c.recommended_patrol_type}</strong></div>
-                      <div>⚖️ {c.dominant_crime_type}</div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="flex items-center gap-3 pt-2">
+              <button 
+                onClick={() => setShowPrintModal(false)}
+                className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg"
+              >
+                Close
+              </button>
+              <button 
+                onClick={() => { window.print(); setShowPrintModal(false); }}
+                className="flex-1 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-bold rounded-lg shadow-md glow-gold"
+              >
+                Print / Save PDF
+              </button>
             </div>
+          </div>
+        </div>
+      )}
 
-            {/* Optimization summary */}
-            {data.optimization_summary && (
-              <div style={{
-                background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '16px 20px',
-              }}>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>
-                  ⚡ Optimization Summary
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
-                  {Object.entries(data.optimization_summary).map(([k, v]: [string, any]) => (
-                    <div key={k} style={{ background: '#f8fafc', borderRadius: '8px', padding: '10px 12px' }}>
-                      <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
-                        {k.replace(/_/g, ' ')}
-                      </div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>{String(v)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

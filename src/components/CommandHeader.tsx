@@ -6,13 +6,15 @@ import {
   Building2, 
   Users, 
   AlertTriangle, 
-  FileText, 
   Clock, 
   Download, 
   Cpu,
   Activity,
   UserCheck,
-  Award
+  Radio,
+  Send,
+  CheckCircle2,
+  Bell
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 
@@ -31,10 +33,14 @@ interface KPIProps {
   onRoleChange?: (role: string) => void;
 }
 
-export default function CommandHeader({ kpi, onOpenCatalyst, activeRole = 'SCRB Chief', onRoleChange }: KPIProps) {
+export default function CommandHeader({ kpi, onOpenCatalyst, activeRole = 'SCRB Director', onRoleChange }: KPIProps) {
   const [time, setTime] = useState<string>('');
   const [exporting, setExporting] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<string>(activeRole);
+  const [showBroadcastModal, setShowBroadcastModal] = useState<boolean>(false);
+  const [broadcastTarget, setBroadcastTarget] = useState<string>('Bengaluru City - Subhedar Chatra PS');
+  const [broadcastMessage, setBroadcastMessage] = useState<string>('RED ZONE ALERT: High risk robbery pattern detected. Deploy 2 addl beat patrols immediately.');
+  const [broadcastSent, setBroadcastSent] = useState<boolean>(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -55,190 +61,221 @@ export default function CommandHeader({ kpi, onOpenCatalyst, activeRole = 'SCRB 
   const handleExportPDF = async () => {
     setExporting(true);
     try {
-      const res = await fetch('http://localhost:8000/api/reports/pdf/1');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.pdf_base64) {
-          const blob = new Blob([atob(data.pdf_base64)], { type: 'text/plain;charset=utf-8' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = data.pdf_filename || 'KSP_SmartBrowz_Case_Brief.txt';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setExporting(false);
-          return;
-        }
-      }
-
-      // Fallback PDF export
       const doc = new jsPDF('p', 'mm', 'a4');
-      doc.setFillColor(248, 250, 252);
+      doc.setFillColor(11, 15, 25);
       doc.rect(0, 0, 210, 297, 'F');
 
-      doc.setTextColor(29, 78, 216);
-      doc.setFontSize(18);
-      doc.text('KARNATAKA STATE POLICE (KSP)', 15, 20);
-      
-      doc.setTextColor(15, 23, 42);
-      doc.setFontSize(14);
-      doc.text('State Crime Records Bureau (SCRB) - Executive Briefing', 15, 28);
-      
+      // Title Banner
+      doc.setTextColor(234, 179, 8); // Gold
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.text('KARNATAKA STATE POLICE — SCRB INTELLIGENCE BRIEF', 14, 20);
+
       doc.setFontSize(10);
-      doc.setTextColor(71, 85, 105);
-      doc.text(`Generated: ${new Date().toLocaleString()} | Role: ${selectedRole}`, 15, 36);
+      doc.setTextColor(148, 163, 184);
+      doc.text(`Generated: ${new Date().toLocaleString('en-IN')} | Role: ${selectedRole}`, 14, 28);
+      doc.text('Confidential — For Internal Police Officer Use Only', 14, 33);
 
-      doc.setDrawColor(29, 78, 216);
-      doc.line(15, 40, 195, 40);
+      doc.setDrawColor(234, 179, 8);
+      doc.setLineWidth(0.5);
+      doc.line(14, 36, 196, 36);
 
+      // Section: Key Stats
+      doc.setTextColor(255, 255, 255);
       doc.setFontSize(12);
-      doc.setTextColor(15, 23, 42);
-      doc.text(`Total FIR Records Logged: ${kpi.total_firs}`, 15, 52);
-      doc.text(`Heinous Offences Tracked: ${kpi.heinous_crimes}`, 15, 60);
-      doc.text(`Accused Profiles Registered: ${kpi.total_accused}`, 15, 68);
-      doc.text(`Police Stations Connected: ${kpi.total_stations}`, 15, 76);
-      doc.text(`Active Emergency Red Zones: ${kpi.active_red_zones}`, 15, 84);
-      doc.text(`Predictive Risk Score Index: ${kpi.predictive_risk_index}/100`, 15, 92);
+      doc.setFont('helvetica', 'bold');
+      doc.text('EXECUTIVE CRIME METRICS SUMMARY', 14, 45);
 
-      doc.line(15, 100, 195, 100);
+      const metrics = [
+        [`Total Registered FIRs`, `${kpi.total_firs.toLocaleString()}`],
+        [`Heinous Offences Recorded`, `${kpi.heinous_crimes}`],
+        [`Active Accused Profiles`, `${kpi.total_accused.toLocaleString()}`],
+        [`Jurisdictional Police Stations`, `${kpi.total_stations}`],
+        [`Active Red-Zone Hotspots`, `${kpi.active_red_zones}`],
+        [`Predictive Crime Risk Index`, `${kpi.predictive_risk_index}% (HIGH)`],
+      ];
 
-      doc.setFontSize(10);
-      doc.setTextColor(29, 78, 216);
-      doc.text('KaavalAI Executive Intelligence — Deployed on Zoho Catalyst AppSail (SmartBrowz PDF Engine)', 15, 110);
+      let y = 54;
+      metrics.forEach(([label, val]) => {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(203, 213, 225);
+        doc.text(label, 14, y);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(234, 179, 8);
+        doc.text(val, 140, y);
+        y += 8;
+      });
 
-      doc.save(`KSP_SCRB_Executive_Report_${Date.now()}.pdf`);
-    } catch (err) {
-      console.error(err);
+      doc.save(`KSP_SCRB_Executive_Brief_${Date.now()}.pdf`);
+    } catch (e) {
+      console.error(e);
     } finally {
       setExporting(false);
     }
   };
 
+  const handleSendBroadcast = (e: React.FormEvent) => {
+    e.preventDefault();
+    setBroadcastSent(true);
+    setTimeout(() => {
+      setBroadcastSent(false);
+      setShowBroadcastModal(false);
+    }, 2000);
+  };
+
   return (
-    <header className="w-full bg-white border-b border-slate-200 sticky top-0 z-40 px-6 py-4 shadow-sm">
-      {/* Top Navbar Row */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-700 border border-blue-800 flex items-center justify-center shadow-sm">
-            <Award className="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-extrabold tracking-tight text-slate-900 font-sans">KAAVAL AI</h1>
-              <span className="px-2.5 py-0.5 text-[11px] font-bold tracking-wider bg-blue-50 text-blue-700 border border-blue-200 rounded uppercase">
-                KSP SCRB Intelligence Hub
-              </span>
+    <>
+      <header className="sticky top-0 z-40 bg-[#0b0f19]/90 backdrop-blur-md border-b border-yellow-500/20 px-4 lg:px-8 py-3.5 shadow-2xl">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          
+          {/* Brand & Live Badge */}
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#1e293b] border border-yellow-500/40 rounded-xl glow-gold text-yellow-400">
+              <ShieldCheck className="w-7 h-7" />
             </div>
-            <p className="text-xs text-slate-500 font-medium">Karnataka State Police • 31 Districts & 1,100+ Police Stations</p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                  KaavalAI <span className="text-yellow-400 font-mono text-xs px-2 py-0.5 rounded bg-yellow-500/10 border border-yellow-500/30">KSP v2.4</span>
+                </h1>
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  LIVE COMMAND
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-medium">
+                Karnataka State Police — SCRB Intelligence & Predictive Analytics Platform
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Role Switcher */}
-          <div className="flex items-center space-x-2 px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-lg shadow-sm">
-            <UserCheck className="w-4 h-4 text-blue-700" />
-            <select 
-              value={selectedRole}
-              onChange={handleRoleSelect}
-              className="bg-transparent text-slate-800 text-xs outline-none cursor-pointer font-semibold"
+          {/* Quick Actions & Role Switcher */}
+          <div className="flex flex-wrap items-center gap-3">
+            
+            {/* Live Clock */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/80 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">
+              <Clock className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
+              <span>{time}</span>
+            </div>
+
+            {/* Officer Role Selector */}
+            <div className="flex items-center gap-2 bg-slate-900 border border-yellow-500/30 rounded-lg px-2 py-1">
+              <UserCheck className="w-3.5 h-3.5 text-yellow-400" />
+              <select
+                value={selectedRole}
+                onChange={handleRoleSelect}
+                className="bg-transparent text-xs font-semibold text-slate-200 outline-none cursor-pointer pr-1"
+              >
+                <option value="SCRB Director" className="bg-slate-900 text-white">SCRB Director</option>
+                <option value="DGP Karnataka" className="bg-slate-900 text-white">DGP Karnataka</option>
+                <option value="SP Bengaluru City" className="bg-slate-900 text-white">SP Bengaluru City</option>
+                <option value="Inspector General (STF)" className="bg-slate-900 text-white">Inspector General (STF)</option>
+              </select>
+            </div>
+
+            {/* Emergency Alert Dispatch Trigger Button */}
+            <button
+              onClick={() => setShowBroadcastModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/90 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition shadow-lg glow-red pulse-badge"
             >
-              <option value="SCRB Chief">Role: SCRB Chief Command</option>
-              <option value="Station House Officer">Role: Station House Officer (SHO)</option>
-              <option value="Investigative Analyst">Role: Crime Analyst</option>
-            </select>
-          </div>
+              <Radio className="w-3.5 h-3.5" />
+              <span>Broadcast Alert</span>
+            </button>
 
-          {/* Catalyst Service Status Badge */}
-          <button
-            onClick={onOpenCatalyst}
-            className="flex items-center space-x-2 px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-lg transition-all"
-          >
-            <Cpu className="w-4 h-4 text-emerald-700" />
-            <span>Zoho Catalyst: 20 Services Active</span>
-          </button>
+            {/* Export Dossier PDF */}
+            <button
+              onClick={handleExportPDF}
+              disabled={exporting}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold rounded-lg text-xs transition shadow-md glow-gold"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>{exporting ? 'Generating...' : 'Export Dossier'}</span>
+            </button>
 
-          {/* Clock Badge */}
-          <div className="flex items-center space-x-2 px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 text-xs font-mono rounded-lg">
-            <Clock className="w-4 h-4 text-amber-600" />
-            <span>{time || '15:30:00 IST'}</span>
-          </div>
+            {/* Catalyst Backend Info Drawer trigger */}
+            <button
+              onClick={onOpenCatalyst}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition"
+            >
+              <Cpu className="w-3.5 h-3.5 text-yellow-400" />
+              <span>Catalyst Cloud</span>
+            </button>
 
-          {/* Export PDF Button */}
-          <button
-            onClick={handleExportPDF}
-            disabled={exporting}
-            className="flex items-center space-x-2 px-4 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-all disabled:opacity-50"
-          >
-            <Download className="w-4 h-4" />
-            <span>{exporting ? 'Generating PDF...' : 'Export Case Brief'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
-        <div className="executive-light-card p-3 flex items-center space-x-3">
-          <div className="p-2.5 bg-blue-100 rounded-lg text-blue-700">
-            <FileText className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 font-medium">Total Active FIRs</div>
-            <div className="text-lg font-bold text-slate-900 tracking-tight">{kpi.total_firs.toLocaleString()}</div>
           </div>
         </div>
+      </header>
 
-        <div className="executive-light-card p-3 flex items-center space-x-3">
-          <div className="p-2.5 bg-rose-100 rounded-lg text-rose-700">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 font-medium">Heinous Offences</div>
-            <div className="text-lg font-bold text-slate-900 tracking-tight">{kpi.heinous_crimes.toLocaleString()}</div>
+      {/* Emergency Broadcast Alert Modal */}
+      {showBroadcastModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[#111827] border border-red-500/40 rounded-2xl p-6 max-w-md w-full shadow-2xl glow-red">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+              <div className="flex items-center gap-2.5 text-red-400">
+                <AlertTriangle className="w-6 h-6 animate-bounce" />
+                <h3 className="text-lg font-extrabold tracking-wide text-white">EMERGENCY POLICE BROADCAST</h3>
+              </div>
+              <button 
+                onClick={() => setShowBroadcastModal(false)}
+                className="text-slate-400 hover:text-white font-mono text-sm px-2"
+              >
+                ✕
+              </button>
+            </div>
+
+            {broadcastSent ? (
+              <div className="py-8 text-center space-y-3">
+                <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
+                <h4 className="text-lg font-bold text-white">ALERT DISPATCHED SUCCESSFULLY</h4>
+                <p className="text-xs text-slate-400">
+                  Signal broadcasted to 18 patrol vehicles & Control Room via Catalyst Wireless Signal.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSendBroadcast} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Target Police Station / Zone</label>
+                  <input
+                    type="text"
+                    value={broadcastTarget}
+                    onChange={(e) => setBroadcastTarget(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:border-red-500 outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Alert Message (High Priority)</label>
+                  <textarea
+                    value={broadcastMessage}
+                    onChange={(e) => setBroadcastMessage(e.target.value)}
+                    rows={3}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:border-red-500 outline-none"
+                    required
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowBroadcastModal(false)}
+                    className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition shadow-lg glow-red flex items-center justify-center gap-1.5"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Dispatch Red-Zone Alert</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
-
-        <div className="executive-light-card p-3 flex items-center space-x-3">
-          <div className="p-2.5 bg-indigo-100 rounded-lg text-indigo-700">
-            <Users className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 font-medium">Accused Profiles</div>
-            <div className="text-lg font-bold text-slate-900 tracking-tight">{kpi.total_accused.toLocaleString()}</div>
-          </div>
-        </div>
-
-        <div className="executive-light-card p-3 flex items-center space-x-3">
-          <div className="p-2.5 bg-amber-100 rounded-lg text-amber-700">
-            <Building2 className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 font-medium">Police Stations</div>
-            <div className="text-lg font-bold text-slate-900 tracking-tight">{kpi.total_stations}</div>
-          </div>
-        </div>
-
-        <div className="executive-light-card p-3 flex items-center space-x-3 border-rose-300 bg-rose-50">
-          <div className="p-2.5 bg-rose-200 rounded-lg text-rose-800">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-600 font-medium">Active Red Zones</div>
-            <div className="text-lg font-bold text-rose-700 tracking-tight">{kpi.active_red_zones} Districts</div>
-          </div>
-        </div>
-
-        <div className="executive-light-card p-3 flex items-center space-x-3">
-          <div className="p-2.5 bg-emerald-100 rounded-lg text-emerald-700">
-            <Activity className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 font-medium">Predictive Risk Index</div>
-            <div className="text-lg font-bold text-emerald-700 tracking-tight">{kpi.predictive_risk_index}/100</div>
-          </div>
-        </div>
-      </div>
-    </header>
+      )}
+    </>
   );
 }

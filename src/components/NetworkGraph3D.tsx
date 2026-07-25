@@ -70,7 +70,7 @@ const NODE_COLORS: Record<string, string> = {
 
 const NODE_COLORS_RINGLEADER = '#7c3aed'; // Purple for top ringleaders
 
-export default function NetworkGraph3D({ data }: { data: any }) {
+export default function NetworkGraph3D({ data }: { data?: any }) {
   const graphRef = useRef<any>(null);
   const [graphData, setGraphData] = useState<{ nodes: GraphNode[]; links: GraphLink[] } | null>(null);
   const [stats, setStats] = useState<NetworkData['graph_stats'] | null>(null);
