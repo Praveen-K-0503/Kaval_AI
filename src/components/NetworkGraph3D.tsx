@@ -124,15 +124,15 @@ export default function NetworkGraph3D({ data }: { data: any }) {
     }
   };
 
-  const handleNodeClick = useCallback((node: GraphNode) => {
-    setSelectedNode(node);
+  const handleNodeClick = useCallback((node: any, _event: MouseEvent) => {
+    setSelectedNode(node as GraphNode);
     // Camera zoom-in on clicked node
     if (graphRef.current && node) {
       const dist = 80;
-      const distRatio = 1 + dist / Math.hypot((node as any).x || 0, (node as any).y || 0, (node as any).z || 0);
+      const distRatio = 1 + dist / Math.hypot(node.x || 0, node.y || 0, node.z || 0);
       graphRef.current.cameraPosition(
-        { x: ((node as any).x || 0) * distRatio, y: ((node as any).y || 0) * distRatio, z: ((node as any).z || 0) * distRatio },
-        node as any,
+        { x: (node.x || 0) * distRatio, y: (node.y || 0) * distRatio, z: (node.z || 0) * distRatio },
+        node,
         1500
       );
     }

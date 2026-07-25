@@ -53,12 +53,12 @@ export default function NetworkPage() {
     setLoading(false);
   };
 
-  const handleNodeClick = useCallback((node: any) => {
+  const handleNodeClick = useCallback((node: any, _event: MouseEvent) => {
     setSelected(node);
     const d = 100;
     const ratio = 1 + d / Math.hypot(node.x || 0, node.y || 0, node.z || 0);
     graphRef.current?.cameraPosition(
-      { x: node.x * ratio, y: node.y * ratio, z: node.z * ratio },
+      { x: (node.x || 0) * ratio, y: (node.y || 0) * ratio, z: (node.z || 0) * ratio },
       node, 1000
     );
   }, []);
