@@ -151,7 +151,7 @@ export default function NetworkPage() {
         {search && filteredNodes.length > 0 && (
           <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,23,42,0.95)', borderRadius: '8px', padding: '8px', maxHeight: '200px', overflowY: 'auto', minWidth: '240px', border: '1px solid #334155' }}>
             {filteredNodes.slice(0, 8).map((n: any) => (
-              <div key={n.id} onClick={() => { handleNodeClick(n); setSearch(''); }}
+              <div key={n.id} onClick={(e) => { handleNodeClick(n, e as unknown as MouseEvent); setSearch(''); }}
                 style={{ padding: '6px 10px', cursor: 'pointer', borderRadius: '4px', fontSize: '11px', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#1e293b')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
