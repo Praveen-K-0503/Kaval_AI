@@ -1,0 +1,14 @@
+{
+  "app_name": "kaavalai-ksp",
+  "platform": "nodejs",
+  "build": {
+    "command": "npm install && npm run build",
+    "output_directory": ".next"
+  },
+  "env": [
+    { "key": "NEXT_PUBLIC_API_URL", "value": "https://kaavalai-ksp-api-60078521867.catalyst.zoho.in" },
+    { "key": "NODE_ENV", "value": "production" }
+  ],
+  "memory": 512,
+  "instances": 1
+}

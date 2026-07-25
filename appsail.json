@@ -1,0 +1,19 @@
+{
+  "service_name": "kaavalai-api",
+  "platform": "python",
+  "runtime": "python3.9",
+  "build": {
+    "command": "pip install -r requirements.txt"
+  },
+  "start": {
+    "command": "uvicorn main:app --host 0.0.0.0 --port 9000"
+  },
+  "working_directory": "backend",
+  "env": [
+    { "key": "CATALYST_ENV", "value": "production" },
+    { "key": "CATALYST_PROJECT_ID", "value": "56816000000013052" }
+  ],
+  "memory": 1024,
+  "instances": 1,
+  "health_check": "/api/health"
+}
