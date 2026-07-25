@@ -1,0 +1,26 @@
+[
+  {
+    "function_name": "nightly_ml_refresh",
+    "handler": "index.nightly_ml_refresh",
+    "runtime": "python3.9",
+    "description": "Re-fetches ML model predictions every night at 01:00 IST",
+    "memory_size": 512,
+    "timeout": 120
+  },
+  {
+    "function_name": "red_zone_alert",
+    "handler": "index.red_zone_alert",
+    "runtime": "python3.9",
+    "description": "Sends email via Catalyst Mail when anomaly risk_score > 75",
+    "memory_size": 256,
+    "timeout": 30
+  },
+  {
+    "function_name": "weekly_summary_report",
+    "handler": "index.weekly_summary_report",
+    "runtime": "python3.9",
+    "description": "Sends weekly crime analytics digest to SCRB Director every Monday 08:00 IST",
+    "memory_size": 256,
+    "timeout": 60
+  }
+]
