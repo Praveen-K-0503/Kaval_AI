@@ -20,7 +20,7 @@ def nightly_ml_refresh(context, basic_io):
     import urllib.request
     import urllib.error
 
-    api_base = os.environ.get("KAAVALAI_API_URL", "http://localhost:8000")
+    api_base = os.environ.get("KAAVALAI_API_URL", "https://kaavalai-backend-50044342834.development.catalystappsail.in")
     endpoints = [
         "/api/ml/hotspots?eps_km=3",
         "/api/ml/forecast?days=30",
