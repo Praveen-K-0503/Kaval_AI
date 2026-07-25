@@ -40,8 +40,14 @@ load_dotenv()
 
 from mcp_server import router as mcp_router
 from database_adapter import db_adapter
-from catalyst_client import catalyst_engine
-from ml_engine import ml_engine
+try:
+    from catalyst_client import catalyst_engine
+except Exception as e:
+    catalyst_engine = None
+try:
+    from ml_engine import ml_engine
+except Exception as e:
+    ml_engine = None
 
 
 # ── Startup Lifespan (model warm-up) ─────────────────────────────────
@@ -73,7 +79,7 @@ app.include_router(mcp_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:3000").split(","),
+    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
