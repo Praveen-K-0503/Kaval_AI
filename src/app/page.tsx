@@ -59,28 +59,15 @@ export default function Home() {
 
   const [predictiveData, setPredictiveData] = useState({
     forecast_period: "Next 30 Days (Aug 2026)",
+    model: "XGBoost + Isolation Forest",
+    model_confidence: "Initializing...",
     high_risk_districts: [
       { district: "Bengaluru Urban", predicted_crimes: 420, risk_level: "Critical (Red Zone)", primary_threat: "Cyber & Banking Fraud" },
       { district: "Mysuru", predicted_crimes: 185, risk_level: "High", primary_threat: "Property Theft & Burglary" },
       { district: "Hubballi-Dharwad", predicted_crimes: 160, risk_level: "High", primary_threat: "Highway Vehicle Robbery" },
       { district: "Mangaluru", predicted_crimes: 140, risk_level: "Elevated", primary_threat: "Financial Transaction Anomaly" }
     ],
-    anomalies: [
-      {
-        id: "ANOM-2026-091",
-        title: "Midnight ATM Tampering Spike along NH-44",
-        severity: "High",
-        description: "3 incidents detected between 01:00 AM - 03:30 AM within a 15km radius of Devanahalli.",
-        action: "Deploy Night Patrol Beat #14 immediately."
-      },
-      {
-        id: "ANOM-2026-092",
-        title: "Repeat MO Match: Fake Banking Officer Calls",
-        severity: "Medium",
-        description: "Zia NLP text similarity matched 4 FIRs across Whitefield and Jayanagar PS.",
-        action: "Initiate joint cyber cell investigation."
-      }
-    ]
+    anomalies: [] as any[],
   });
 
   const [catalystServices, setCatalystServices] = useState([
