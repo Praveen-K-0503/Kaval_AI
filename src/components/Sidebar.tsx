@@ -21,8 +21,8 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/', icon: <LayoutDashboard size={18} />, label: 'Command Center' },
   { href: '/firs', icon: <FileText size={18} />, label: 'FIR Registry', badge: 'LIVE', badgeColor: '#059669' },
   { href: '/analytics', icon: <Brain size={18} />, label: 'ML Analytics', badge: 'AI', badgeColor: '#7c3aed' },
-  { href: '/network', icon: <Network size={18} />, label: 'Criminal Network', badge: '3D', badgeColor: '#1d4ed8' },
-  { href: '/beat-patrol', icon: <Shield size={18} />, label: 'Beat Patrol', badge: 'NEW', badgeColor: '#059669' },
+  { href: '/network', icon: <Network size={18} />, label: 'Criminal Network', badge: '3D', badgeColor: '#7c3aed' },
+  { href: '/beat-patrol', icon: <Shield size={18} />, label: 'Beat Patrol Optimizer', badge: 'NEW', badgeColor: '#059669' },
 ];
 
 export default function Sidebar() {
