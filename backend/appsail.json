@@ -1,0 +1,15 @@
+{
+  "service_name": "kaavalai-production-api",
+  "platform": "python",
+  "runtime": "python3.12",
+  "build": {
+    "command": "pip install -r requirements.txt"
+  },
+  "start": {
+    "command": "python3 run.py"
+  },
+  "working_directory": "",
+  "memory": 1024,
+  "instances": 1,
+  "port": 9000
+}
