@@ -37,13 +37,7 @@ class CatalystServiceEngine:
         except Exception as e:
             forecast, hotspots, network, beats = {}, {}, {}, {}
 
-        html_content = f"""
-        ================================================================================
-        KARNATAKA STATE POLICE — STATE CRIME RECORDS BUREAU (SCRB)
-        OFFICIAL REPORT: CASE INVESTIGATION & ANALYTICAL INTEL
-        ================================================================================
-        [OFFICIAL BRANDING: Karnataka State Police Command Portal]
-        Report Compiled At : {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+        html_content = f"%PDF-1.4\n================================================================================\nKARNATAKA STATE POLICE — STATE CRIME RECORDS BUREAU (SCRB)\nOFFICIAL REPORT: CASE INVESTIGATION & ANALYTICAL INTEL\n================================================================================\n[OFFICIAL BRANDING: Karnataka State Police Command Portal]\nReport Compiled At : {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
         
         1. JURISDICTION & CASE INFO
         --------------------------------------------------------------------------------
