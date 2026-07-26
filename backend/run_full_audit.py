@@ -20,6 +20,14 @@ def verify_health_check() -> bool:
         if res.status_code == 200:
             print(f"[PASS] Health endpoint active: {res.json()}")
             
+            # Check liveness and readiness probes
+            live_res = requests.get(f"{API_URL}/health/liveness")
+            ready_res = requests.get(f"{API_URL}/health/readiness")
+            if live_res.status_code == 200 and ready_res.status_code == 200:
+                print(f"[PASS] Kubernetes Liveness ({live_res.json().get('status')}) & Readiness ({ready_res.json().get('status')}) probes verified.")
+            else:
+                print(f"[FAIL] Probes failed. Liveness: {live_res.status_code}, Readiness: {ready_res.status_code}")
+            
             # Check Admin Health status
             admin_res = requests.get(f"{API_URL}/api/admin/health")
             print(f"[PASS] Admin health endpoint active: {admin_res.json()}")
@@ -112,6 +120,49 @@ def verify_crud_operations(token: str):
         print(f"[PASS] Update FIR success.")
     else:
         print(f"[FAIL] Update FIR failed: {update_res.text}")
+
+    # 3b. Catalyst Stratus Evidence Upload Verification
+    try:
+        files = {'file': ('audit_forensic_report.pdf', b'%PDF-1.4 dummy pdf bytes', 'application/pdf')}
+        data = {'CaseMasterID': case_id, 'UploadedBy': 'audit_officer'}
+        upload_res = requests.post(f"{API_URL}/api/evidence/upload", files=files, data=data)
+        if upload_res.status_code == 200:
+            up_data = upload_res.json()
+            evidence_id = up_data["EvidenceID"]
+            stratus_id = up_data["StratusFileID"]
+            print(f"[PASS] Catalyst Stratus File Upload success (Evidence ID: {evidence_id})")
+            
+            # Fetch by FIR ID check
+            list_res = requests.get(f"{API_URL}/api/evidence/fir/{case_id}")
+            if list_res.status_code == 200 and len(list_res.json()) >= 1:
+                print(f"[PASS] Read evidence by FIR ID verified.")
+            else:
+                print(f"[FAIL] Read evidence by FIR ID failed.")
+
+            # Download check
+            dl_res = requests.get(f"{API_URL}{up_data['FileURL']}")
+            if dl_res.status_code == 200 and b'%PDF' in dl_res.content:
+                print(f"[PASS] Catalyst Stratus File Download verified.")
+            else:
+                print(f"[FAIL] Catalyst Stratus File Download failed.")
+
+            # SmartBrowz Report Compiler Verification
+            rep_res = requests.post(f"{API_URL}/api/report/generate", json={"CaseMasterID": case_id})
+            if rep_res.status_code == 200 and rep_res.headers.get("content-type") == "application/pdf":
+                print(f"[PASS] SmartBrowz compiled PDF report generated successfully.")
+            else:
+                print(f"[FAIL] SmartBrowz PDF generation failed. Status: {rep_res.status_code}")
+
+            # Delete check
+            del_ev_res = requests.delete(f"{API_URL}/api/evidence/{evidence_id}")
+            if del_ev_res.status_code == 200:
+                print(f"[PASS] Stratus file and metadata deleted successfully.")
+            else:
+                print(f"[FAIL] Stratus file deletion failed: {del_ev_res.text}")
+        else:
+            print(f"[FAIL] Catalyst Stratus upload failed: {upload_res.status_code} - {upload_res.text}")
+    except Exception as e:
+        print(f"[FAIL] Evidence/SmartBrowz audit error: {e}")
 
     # 4. Input Schema Validation
     bad_payload = fir_payload.copy()

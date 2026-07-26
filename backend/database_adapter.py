@@ -89,10 +89,16 @@ class SQLiteBackend:
             CREATE TABLE IF NOT EXISTS Evidence (
                 EvidenceID INTEGER PRIMARY KEY AUTOINCREMENT,
                 CaseMasterID INTEGER,
-                EvidenceName TEXT NOT NULL,
+                EvidenceName TEXT,
                 EvidenceType TEXT,
                 Status TEXT,
-                CollectedDate TEXT
+                CollectedDate TEXT,
+                FileName TEXT,
+                FileType TEXT,
+                UploadedBy TEXT,
+                UploadTime TEXT,
+                StratusFileID TEXT,
+                FileURL TEXT
             );
             """)
             cursor.execute("""
