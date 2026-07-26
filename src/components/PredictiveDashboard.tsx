@@ -10,8 +10,9 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
   CartesianGrid, LineChart, Line, Area, AreaChart
 } from 'recharts';
+import { API_BASE_URL } from '@/lib/apiConfig';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API = API_BASE_URL;
 
 interface AnomalyItem {
   anomaly_id: string;

@@ -5,7 +5,12 @@
   "platform": "nodejs",
   "type": "Advanced",
   "functions": {
-    "targets": ["kaavalai_functions"]
+    "source": "functions",
+    "targets": [
+      "nightly_ml_refresh",
+      "red_zone_alert",
+      "weekly_summary_report"
+    ]
   },
   "defaults": { "project": 1, "env": 1 },
   "actives": { "project": 1, "env": 1 },

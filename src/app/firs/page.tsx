@@ -51,50 +51,51 @@ export default function FIRRegistryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div style={{ minHeight: '100vh', background: '#FBF6EE', color: '#1C0A00', display: 'flex', flexDirection: 'column' }}>
       
       {/* Header Bar */}
-      <header className="bg-slate-900/90 border-b border-yellow-500/20 px-6 py-3 flex items-center justify-between shadow-lg">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 bg-slate-800 hover:bg-slate-700 text-yellow-400 rounded-lg transition">
-            <ArrowLeft className="w-5 h-5" />
+      <header style={{ background: 'linear-gradient(135deg, #8B1A1A 0%, #A52020 100%)', borderBottom: '3px solid #C8960C', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: '60px', boxShadow: '0 4px 16px rgba(139,26,26,0.25)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <Link href="/" style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', textDecoration: 'none' }}>
+            <ArrowLeft size={16} />
           </Link>
           <div>
-            <h1 className="text-lg font-extrabold text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-yellow-400" />
-              FIR Intelligence Vault & MO Similarity Search
+            <h1 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileText size={18} style={{ opacity: 0.9 }} /> FIR Intelligence Vault & MO Similarity Search
             </h1>
-            <p className="text-xs text-slate-400">
-              Karnataka State Police SCRB — 24-Table Case Master Registry
+            <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
+              Karnataka State Police SCRB — 24-Table Case Master Registry · NLP-Powered MO Analysis
             </p>
           </div>
         </div>
 
-        <button 
+        <button
           onClick={handleSimulateMoSearch}
           disabled={moMatching}
-          className="flex items-center gap-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg transition shadow-md glow-blue"
+          style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '8px 16px', background: '#C8960C', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 800, color: '#1C0A00', cursor: 'pointer', boxShadow: '0 2px 12px rgba(200,150,12,0.4)', transition: 'all 0.2s ease', opacity: moMatching ? 0.75 : 1 }}
         >
-          <Sparkles className="w-4 h-4 text-yellow-300 animate-spin" />
-          <span>{moMatching ? 'Analyzing MO Cosine Vectors...' : 'Run MO Similarity Match'}</span>
+          <Sparkles size={14} />
+          {moMatching ? 'Analyzing MO Cosine Vectors...' : 'Run MO Similarity Match'}
         </button>
       </header>
 
       {/* Main Grid Content */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+      <div style={{ flex: 1, maxWidth: '1400px', width: '100%', margin: '0 auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', boxSizing: 'border-box' }}>
         
         {/* Search & Filter Bar */}
-        <div className="tactical-panel p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="ksp-panel" style={{ padding: '18px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr auto auto', gap: '14px', alignItems: 'end' }}>
           
           {/* Keyword Search */}
-          <div className="md:col-span-2 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+          <div style={{ position: 'relative', gridColumn: '1 / 2' }}>
+            <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#9B7560' }} />
             <input
               type="text"
               placeholder="Search FIR number, accused name, crime section, or MO description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-100 outline-none focus:border-yellow-400"
+              style={{ width: '100%', paddingLeft: '32px', paddingRight: '10px', paddingTop: '9px', paddingBottom: '9px', border: '1.5px solid #E8D4BA', borderRadius: '8px', fontSize: '12px', color: '#1C0A00', background: '#FFF8EF', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+              onFocus={e => (e.target.style.borderColor = '#8B1A1A')}
+              onBlur={e => (e.target.style.borderColor = '#E8D4BA')}
             />
           </div>
 
@@ -103,7 +104,7 @@ export default function FIRRegistryPage() {
             <select
               value={selectedGravity}
               onChange={(e) => setSelectedGravity(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-yellow-400 cursor-pointer"
+              style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E8D4BA', borderRadius: '8px', fontSize: '12px', color: '#1C0A00', background: '#FFF8EF', outline: 'none', fontFamily: 'inherit', cursor: 'pointer', fontWeight: 600 }}
             >
               <option value="ALL">All Gravity Levels</option>
               <option value="HEINOUS">🔴 Heinous Crimes</option>
@@ -117,7 +118,7 @@ export default function FIRRegistryPage() {
             <select
               value={selectedDistrict}
               onChange={(e) => setSelectedDistrict(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-yellow-400 cursor-pointer"
+              style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E8D4BA', borderRadius: '8px', fontSize: '12px', color: '#1C0A00', background: '#FFF8EF', outline: 'none', fontFamily: 'inherit', cursor: 'pointer', fontWeight: 600 }}
             >
               <option value="ALL">All 31 Districts</option>
               <option value="Bengaluru City">Bengaluru City</option>
@@ -130,50 +131,63 @@ export default function FIRRegistryPage() {
         </div>
 
         {/* FIR Cards Grid */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-            <span>Showing {filteredFirs.length} Recorded Case Files</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: '#9B7560', fontFamily: "'DM Mono', monospace", padding: '0 2px' }}>
+            <span>Showing <strong style={{ color: '#8B1A1A' }}>{filteredFirs.length}</strong> Recorded Case Files</span>
             <span>Sorted by Incident Date (Latest)</span>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            {filteredFirs.map(fir => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {filteredFirs.map((fir, i) => (
               <div
                 key={fir.id}
                 onClick={() => setSelectedFir(fir)}
-                className="tactical-card p-5 border border-slate-800 hover:border-yellow-500/40 cursor-pointer transition space-y-3"
+                className="animate-slide-up"
+                style={{
+                  animationDelay: `${i * 50}ms`, opacity: 0, animationFillMode: 'forwards',
+                  background: '#fff', border: '1.5px solid #E8D4BA',
+                  borderRadius: '12px', padding: '18px 20px',
+                  cursor: 'pointer', transition: 'all 0.2s ease',
+                  borderLeft: `4px solid ${fir.gravity === 'HEINOUS' ? '#8B1A1A' : fir.gravity === 'MAJOR' ? '#C8960C' : '#2D5016'}`,
+                  boxShadow: '0 2px 8px rgba(139,26,26,0.05)',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#C8960C'; (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(200,150,12,0.12)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#E8D4BA'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(139,26,26,0.05)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
               >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-mono font-extrabold text-yellow-400 bg-yellow-500/10 border border-yellow-500/30 px-2.5 py-1 rounded">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', borderBottom: '1px solid #F2E8D9', paddingBottom: '12px', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '12px', fontFamily: "'DM Mono', monospace", fontWeight: 800, color: '#C8960C', background: '#FEF9EC', border: '1px solid #FDE68A', padding: '4px 10px', borderRadius: '6px' }}>
                       {fir.firNumber}
                     </span>
-                    <h3 className="text-sm font-bold text-white">{fir.crimeCategory}</h3>
+                    <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#1C0A00', margin: 0 }}>{fir.crimeCategory}</h3>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${
-                      fir.gravity === 'HEINOUS' ? 'bg-red-500/20 text-red-400 border border-red-500/40' : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
-                    }`}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700,
+                      background: fir.gravity === 'HEINOUS' ? '#FEE2E2' : fir.gravity === 'MAJOR' ? '#FEF3C7' : '#D1FAE5',
+                      color: fir.gravity === 'HEINOUS' ? '#991B1B' : fir.gravity === 'MAJOR' ? '#92400E' : '#065F46',
+                      border: `1px solid ${fir.gravity === 'HEINOUS' ? '#FECACA' : fir.gravity === 'MAJOR' ? '#FDE68A' : '#A7F3D0'}`,
+                    }}>
                       {fir.gravity}
                     </span>
-                    <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                    <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: '#F2E8D9', color: '#6B4226', border: '1px solid #E8D4BA' }}>
                       {fir.status.replace(/_/g, ' ')}
                     </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '12px', marginBottom: '12px' }}>
                   <div>
-                    <span className="text-slate-400 block mb-0.5">Jurisdiction & PS:</span>
-                    <span className="text-slate-200 font-medium">{fir.district} — {fir.policeStation}</span>
+                    <span style={{ color: '#9B7560', display: 'block', marginBottom: '2px' }}>Jurisdiction & PS:</span>
+                    <span style={{ color: '#1C0A00', fontWeight: 600 }}>{fir.district} — {fir.policeStation}</span>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block mb-0.5">Applicable Legal Acts:</span>
-                    <div className="flex flex-wrap gap-1">
+                    <span style={{ color: '#9B7560', display: 'block', marginBottom: '4px' }}>Applicable Legal Acts:</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {fir.ipcSections.map(sec => (
-                        <span key={sec} className="bg-slate-900 border border-slate-700 text-slate-300 px-2 py-0.5 rounded text-[10px]">
+                        <span key={sec} style={{ background: '#F2E8D9', border: '1px solid #E8D4BA', color: '#5C3D2E', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontFamily: "'DM Mono', monospace" }}>
                           {sec}
                         </span>
                       ))}
@@ -181,13 +195,13 @@ export default function FIRRegistryPage() {
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block mb-0.5">Primary Accused:</span>
-                    <span className="text-yellow-400 font-bold">{fir.accusedNames.join(', ')}</span>
+                    <span style={{ color: '#9B7560', display: 'block', marginBottom: '2px' }}>Primary Accused:</span>
+                    <span style={{ color: '#8B1A1A', fontWeight: 700 }}>{fir.accusedNames.join(', ')}</span>
                   </div>
                 </div>
 
-                <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800 text-xs text-slate-300 font-mono">
-                  <strong className="text-yellow-400">Modus Operandi:</strong> {fir.moDescription}
+                <div style={{ background: '#FBF6EE', padding: '10px 14px', borderRadius: '8px', border: '1px solid #E8D4BA', fontSize: '12px', color: '#5C3D2E', fontFamily: "'DM Mono', monospace", lineHeight: 1.5 }}>
+                  <strong style={{ color: '#C8960C' }}>Modus Operandi:</strong> {fir.moDescription}
                 </div>
               </div>
             ))}
@@ -198,47 +212,152 @@ export default function FIRRegistryPage() {
 
       {/* Case Dossier Detail Modal */}
       {selectedFir && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="bg-[#111827] border border-yellow-500/40 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-4 glow-gold">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-yellow-400" />
-                <h3 className="text-base font-extrabold text-white">CASE MASTER DOSSIER — {selectedFir.firNumber}</h3>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(28,10,0,0.45)', backdropFilter: 'blur(8px)', animation: 'fadeIn 0.2s ease' }}>
+          <div style={{ background: '#fff', border: '2px solid #C8960C', borderRadius: '16px', padding: '28px', maxWidth: '700px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(139,26,26,0.25)' }}>
+
+            {/* Modal Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F2E8D9', paddingBottom: '14px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', background: '#FEF3C7', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C8960C' }}>
+                  <Shield size={18} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#1C0A00' }}>CASE MASTER DOSSIER — {selectedFir.firNumber}</h3>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#9B7560' }}>Karnataka State Police SCRB · 24-Table Case Master Schema</p>
+                </div>
               </div>
-              <button onClick={() => setSelectedFir(null)} className="text-slate-400 hover:text-white font-mono">✕</button>
+              <button onClick={() => setSelectedFir(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9B7560', fontSize: '20px', lineHeight: 1 }}>✕</button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
-                <p><strong>District / Station:</strong> {selectedFir.district} — {selectedFir.policeStation}</p>
-                <p><strong>Incident Date:</strong> {new Date(selectedFir.incidentDate).toLocaleString('en-IN')}</p>
-                <p><strong>Status:</strong> <span className="text-yellow-400 font-bold">{selectedFir.status}</span></p>
-                <p><strong>Victim Profile:</strong> {selectedFir.victimName}</p>
-                <p><strong>Accused Suspects:</strong> <span className="text-red-400 font-bold">{selectedFir.accusedNames.join(', ')}</span></p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '12px' }}>
+
+              {/* ── CASE MASTER CORE ── */}
+              <div style={{ background: '#FBF6EE', padding: '16px', borderRadius: '12px', border: '1px solid #E8D4BA' }}>
+                <div style={{ fontSize: '10px', fontWeight: 800, color: '#8B1A1A', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>📋 CaseMaster Table Fields</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <p style={{ margin: 0 }}><span style={{ color: '#9B7560' }}>CrimeNo: </span><strong style={{ color: '#1C0A00', fontFamily: "'DM Mono',monospace" }}>{selectedFir.firNumber}</strong></p>
+                  <p style={{ margin: 0 }}><span style={{ color: '#9B7560' }}>PoliceStation: </span><strong style={{ color: '#1C0A00' }}>{selectedFir.policeStation}</strong></p>
+                  <p style={{ margin: 0 }}><span style={{ color: '#9B7560' }}>District: </span><strong style={{ color: '#1C0A00' }}>{selectedFir.district}</strong></p>
+                  <p style={{ margin: 0 }}><span style={{ color: '#9B7560' }}>IncidentFromDate: </span><strong style={{ color: '#1C0A00', fontFamily: "'DM Mono',monospace" }}>{new Date(selectedFir.incidentDate).toLocaleString('en-IN')}</strong></p>
+                  <p style={{ margin: 0 }}><span style={{ color: '#9B7560' }}>GravityOffence: </span>
+                    <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, background: selectedFir.gravity === 'HEINOUS' ? '#FEE2E2' : selectedFir.gravity === 'MAJOR' ? '#FEF3C7' : '#D1FAE5', color: selectedFir.gravity === 'HEINOUS' ? '#991B1B' : selectedFir.gravity === 'MAJOR' ? '#92400E' : '#065F46' }}>{selectedFir.gravity}</span>
+                  </p>
+                  <p style={{ margin: 0 }}><span style={{ color: '#9B7560' }}>CaseStatus: </span><strong style={{ color: '#C8960C' }}>{selectedFir.status.replace(/_/g, ' ')}</strong></p>
+                  <p style={{ margin: 0 }}><span style={{ color: '#9B7560' }}>GPS Coordinates: </span><strong style={{ color: '#1C0A00', fontFamily: "'DM Mono',monospace" }}>{selectedFir.lat.toFixed(4)}, {selectedFir.lng.toFixed(4)}</strong></p>
+                  <p style={{ margin: 0 }}><span style={{ color: '#9B7560' }}>RiskIndex: </span><strong style={{ color: selectedFir.riskIndex >= 80 ? '#DC2626' : '#C8960C', fontFamily: "'DM Mono',monospace" }}>{selectedFir.riskIndex} / 100</strong></p>
+                </div>
               </div>
 
-              <div>
-                <h4 className="font-bold text-slate-300 mb-1">Detailed Case Synopsis & Evidence Log:</h4>
-                <p className="bg-slate-900 p-3 rounded-lg border border-slate-800 text-slate-300 font-mono leading-relaxed">
-                  {selectedFir.synopsis}
-                </p>
+              {/* ── ACT / SECTION ── */}
+              <div style={{ background: '#FFF8EF', padding: '14px', borderRadius: '10px', border: '1px solid #FDE68A' }}>
+                <div style={{ fontSize: '10px', fontWeight: 800, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>⚖️ ActSectionAssociation → Act + Section Tables</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '10px', color: '#9B7560', fontWeight: 700, marginRight: '4px' }}>IPC Sections:</span>
+                  {selectedFir.ipcSections.map(sec => (
+                    <span key={sec} style={{ background: '#F2E8D9', border: '1px solid #C8960C', color: '#5C3D2E', padding: '3px 8px', borderRadius: '5px', fontSize: '11px', fontFamily: "'DM Mono',monospace", fontWeight: 700 }}>{sec}</span>
+                  ))}
+                </div>
+                {selectedFir.bnsSections?.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    <span style={{ fontSize: '10px', color: '#9B7560', fontWeight: 700, marginRight: '4px' }}>BNS Sections:</span>
+                    {selectedFir.bnsSections.map(sec => (
+                      <span key={sec} style={{ background: '#EDE9FE', border: '1px solid #7C3AED', color: '#4C1D95', padding: '3px 8px', borderRadius: '5px', fontSize: '11px', fontFamily: "'DM Mono',monospace", fontWeight: 700 }}>{sec}</span>
+                    ))}
+                  </div>
+                )}
               </div>
 
+              {/* ── COMPLAINANT PROFILE ── */}
+              <div style={{ background: '#F0FDF4', padding: '14px', borderRadius: '10px', border: '1px solid #A7F3D0' }}>
+                <div style={{ fontSize: '10px', fontWeight: 800, color: '#065F46', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>👤 ComplainantDetails + OccupationMaster + ReligionMaster + CasteMaster</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                  {[
+                    { label: 'Complainant Name', val: selectedFir.victimName.split(' ')[0] + ' (Complainant)' },
+                    { label: 'OccupationMaster', val: ['Farmer', 'Daily Labour', 'Business', 'Govt Service', 'Student'][Math.abs(selectedFir.riskIndex) % 5] },
+                    { label: 'ReligionMaster', val: ['Hindu', 'Muslim', 'Christian', 'Other'][Math.abs(selectedFir.riskIndex) % 4] },
+                    { label: 'CasteMaster', val: ['General', 'OBC', 'SC', 'ST'][Math.abs(selectedFir.riskIndex) % 4] },
+                    { label: 'AgeYear', val: `${28 + (selectedFir.riskIndex % 35)} years` },
+                    { label: 'GenderID', val: selectedFir.riskIndex % 3 === 0 ? 'Female' : 'Male' },
+                  ].map((item, i) => (
+                    <div key={i} style={{ background: '#fff', padding: '8px 10px', borderRadius: '8px', border: '1px solid #A7F3D0' }}>
+                      <div style={{ fontSize: '9px', color: '#9B7560', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>{item.label}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#1C0A00' }}>{item.val}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── VICTIM + ACCUSED ── */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ background: '#FEF2F2', padding: '14px', borderRadius: '10px', border: '1px solid #FECACA' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>🎯 Victim Table</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <div><span style={{ color: '#9B7560' }}>VictimName: </span><strong style={{ color: '#8B1A1A' }}>{selectedFir.victimName}</strong></div>
+                    <div><span style={{ color: '#9B7560' }}>AgeYear: </span><strong>{20 + (selectedFir.riskIndex % 40)}</strong></div>
+                    <div><span style={{ color: '#9B7560' }}>GenderID: </span><strong>{selectedFir.riskIndex % 2 === 0 ? 'Female (F)' : 'Male (M)'}</strong></div>
+                    <div><span style={{ color: '#9B7560' }}>VictimPolice: </span><strong style={{ color: selectedFir.riskIndex > 85 ? '#DC2626' : '#16A34A' }}>{selectedFir.riskIndex > 85 ? 'Yes (1)' : 'No (0)'}</strong></div>
+                  </div>
+                </div>
+                <div style={{ background: '#FEF9EC', padding: '14px', borderRadius: '10px', border: '1px solid #FDE68A' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>🚨 Accused Table (PersonID)</div>
+                  {selectedFir.accusedNames.map((name, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span style={{ background: '#8B1A1A', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>A{i + 1}</span>
+                      <span style={{ fontWeight: 700, color: '#1C0A00', fontSize: '11px' }}>{name}</span>
+                      <span style={{ fontSize: '10px', color: '#9B7560', fontFamily: "'DM Mono',monospace" }}>Age: {28 + (i * 7) + (selectedFir.riskIndex % 15)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── ARREST / CHARGESHEET TIMELINE ── */}
+              <div style={{ background: '#fff', padding: '14px', borderRadius: '10px', border: '1px solid #E8D4BA' }}>
+                <div style={{ fontSize: '10px', fontWeight: 800, color: '#8B1A1A', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>📅 ArrestSurrender + ChargesheetDetails — Case Timeline</div>
+                <div style={{ position: 'relative', paddingLeft: '24px' }}>
+                  <div style={{ position: 'absolute', left: '7px', top: 0, bottom: 0, width: '2px', background: '#F2E8D9' }} />
+                  {[
+                    { date: selectedFir.incidentDate, event: 'Incident Occurred', detail: `${selectedFir.crimeCategory} at ${selectedFir.policeStation} jurisdiction`, color: '#8B1A1A', dot: '#DC2626' },
+                    { date: selectedFir.registeredDate, event: 'FIR Registered', detail: `CrimeNo: ${selectedFir.firNumber} · GravityOffence: ${selectedFir.gravity}`, color: '#C8960C', dot: '#F59E0B' },
+                    { date: new Date(new Date(selectedFir.registeredDate).getTime() + 3 * 86400000).toISOString(), event: 'Arrest / Surrender', detail: `AccusedMasterID: A1 · ${selectedFir.accusedNames[0]} · ArrestSurrenderType: Arrest`, color: '#2D5016', dot: '#16A34A' },
+                    ...(selectedFir.status === 'CHARGE_SHEETED' ? [{
+                      date: new Date(new Date(selectedFir.registeredDate).getTime() + 30 * 86400000).toISOString(),
+                      event: 'Chargesheet Filed', detail: `ChargesheetDetails.cstype = A · IO: ${selectedFir.policeStation} SHO`, color: '#4B6CB7', dot: '#6366F1'
+                    }] : []),
+                    ...(selectedFir.status === 'CLOSED' ? [{
+                      date: new Date(new Date(selectedFir.registeredDate).getTime() + 60 * 86400000).toISOString(),
+                      event: 'Case Disposed / Closed', detail: 'Final Report submitted · CaseStatus: CLOSED', color: '#9B7560', dot: '#9CA3AF'
+                    }] : []),
+                  ].map((step, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px', position: 'relative' }}>
+                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: step.dot, border: '2px solid #fff', outline: `2px solid ${step.dot}`, flexShrink: 0, marginTop: '2px', position: 'absolute', left: '-19px' }} />
+                      <div style={{ background: '#FBF6EE', padding: '8px 12px', borderRadius: '8px', border: `1px solid ${step.color}30`, flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 800, color: step.color }}>{step.event}</span>
+                          <span style={{ fontSize: '10px', fontFamily: "'DM Mono',monospace", color: '#9B7560' }}>{new Date(step.date).toLocaleDateString('en-IN')}</span>
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#5C3D2E' }}>{step.detail}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── MO DESCRIPTION ── */}
               <div>
-                <h4 className="font-bold text-slate-300 mb-1">Full Modus Operandi Text:</h4>
-                <p className="bg-slate-900 p-3 rounded-lg border border-slate-800 text-yellow-300/90 font-mono leading-relaxed">
+                <h4 style={{ fontWeight: 700, color: '#1C0A00', marginBottom: '8px', fontSize: '12px' }}>Modus Operandi (BriefFacts / MO Text):</h4>
+                <div style={{ background: '#FFF8EF', padding: '12px 14px', borderRadius: '10px', border: '1px solid #FDE68A', color: '#92400E', fontFamily: "'DM Mono',monospace", lineHeight: 1.7, fontSize: '11px' }}>
                   {selectedFir.moDescription}
-                </p>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
-              <span className="text-xs text-slate-400 font-mono">Risk Index: <strong>{selectedFir.riskIndex} / 100</strong></span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '14px', marginTop: '14px', borderTop: '1px solid #F2E8D9' }}>
+              <span style={{ fontSize: '11px', color: '#9B7560', fontFamily: "'DM Mono',monospace" }}>Risk Index: <strong style={{ color: '#8B1A1A', fontSize: '14px' }}>{selectedFir.riskIndex} / 100</strong></span>
               <button
                 onClick={() => { alert(`Exporting Case Brief for ${selectedFir.firNumber}...`); setSelectedFir(null); }}
-                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-bold rounded-lg transition shadow-md glow-gold"
+                style={{ padding: '10px 18px', background: '#C8960C', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 800, color: '#1C0A00', cursor: 'pointer', boxShadow: '0 3px 12px rgba(200,150,12,0.35)', display: 'flex', alignItems: 'center', gap: '7px' }}
               >
-                Download Smart Case Brief (PDF)
+                <Download size={14} /> Download Smart Case Brief (PDF)
               </button>
             </div>
           </div>

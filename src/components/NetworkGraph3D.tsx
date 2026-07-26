@@ -3,8 +3,9 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Network, Users, Link2, Award, RefreshCw, Maximize2, Info } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/apiConfig';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API = API_BASE_URL;
 
 // Dynamically import ForceGraph3D — no SSR (uses WebGL)
 const ForceGraph3D = dynamic(() => import('react-force-graph-3d'), {

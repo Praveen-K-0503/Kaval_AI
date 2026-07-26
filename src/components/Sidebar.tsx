@@ -2,150 +2,236 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, FileText, Brain, Network, Shield,
-  BarChart2, Settings, ChevronLeft, ChevronRight,
-  Map, AlertTriangle, BookOpen
+  LayoutDashboard,
+  FileText,
+  Brain,
+  Network,
+  Shield,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  BarChart3,
+  Layers
 } from 'lucide-react';
 
 interface NavItem {
   href: string;
   icon: React.ReactNode;
   label: string;
+  sublabel?: string;
   badge?: string;
-  badgeColor?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/', icon: <LayoutDashboard size={18} />, label: 'Command Center' },
-  { href: '/firs', icon: <FileText size={18} />, label: 'FIR Registry', badge: 'LIVE', badgeColor: '#059669' },
-  { href: '/analytics', icon: <Brain size={18} />, label: 'ML Analytics', badge: 'AI', badgeColor: '#7c3aed' },
-  { href: '/network', icon: <Network size={18} />, label: 'Criminal Network', badge: '3D', badgeColor: '#7c3aed' },
-  { href: '/beat-patrol', icon: <Shield size={18} />, label: 'Beat Patrol Optimizer', badge: 'NEW', badgeColor: '#059669' },
+  { href: '/',            icon: <LayoutDashboard size={18} />, label: 'Home',               sublabel: 'Command Center' },
+  { href: '/firs',        icon: <FileText size={18} />,        label: 'FIR Intelligence',   sublabel: 'Case Master Vault',   badge: 'LIVE' },
+  { href: '/analytics',   icon: <BarChart3 size={18} />,       label: 'SCRB Analytics',     sublabel: 'Crime Forecasting',   badge: 'AI' },
+  { href: '/network',     icon: <Network size={18} />,         label: 'Syndicate Network',  sublabel: '3D Criminal Graph',   badge: '3D' },
+  { href: '/beat-patrol', icon: <Shield size={18} />,          label: 'Beat Patrol',        sublabel: 'Route Optimizer' },
 ];
+
+const BADGE_COLOR: Record<string, { bg: string; text: string }> = {
+  LIVE: { bg: '#D1FAE5', text: '#065F46' },
+  AI:   { bg: '#EDE9FE', text: '#5B21B6' },
+  '3D': { bg: '#FEF3C7', text: '#92400E' },
+};
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div style={{
-      width: collapsed ? '60px' : '220px',
-      minHeight: '100vh',
-      background: '#fff',
-      borderRight: '1px solid #e2e8f0',
-      transition: 'width 0.25s ease',
-      display: 'flex',
-      flexDirection: 'column',
-      position: 'fixed',
-      left: 0,
-      top: 0,
-      zIndex: 40,
-      boxShadow: '2px 0 8px rgba(0,0,0,0.04)',
-    }}>
-
-      {/* Logo */}
+    <aside
+      style={{
+        width: collapsed ? '72px' : '240px',
+        minHeight: '100vh',
+        background: '#FFFFFF',
+        borderRight: '1px solid #E8D4BA',
+        transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'fixed',
+        left: 0, top: 0,
+        zIndex: 50,
+        boxShadow: '4px 0 20px rgba(139,26,26,0.07)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* KSP Logo & Brand */}
       <div style={{
-        padding: '16px 12px', borderBottom: '1px solid #f1f5f9',
-        display: 'flex', alignItems: 'center', gap: '10px',
-        minHeight: '64px',
+        padding: '16px 14px',
+        borderBottom: '1px solid #F2E8D9',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        minHeight: '72px',
+        background: 'linear-gradient(135deg, #8B1A1A 0%, #A52020 100%)',
       }}>
         <div style={{
-          width: '32px', height: '32px', minWidth: '32px',
-          background: 'linear-gradient(135deg, #1d4ed8, #7c3aed)',
-          borderRadius: '8px', display: 'flex', alignItems: 'center',
-          justifyContent: 'center',
+          width: '42px', height: '42px', minWidth: '42px',
+          borderRadius: '50%',
+          background: '#fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          overflow: 'hidden',
+          flexShrink: 0,
         }}>
-          <span style={{ fontSize: '14px' }}>⚔️</span>
+          <Image
+            src="/ksp-logo.jpg"
+            alt="KSP Logo"
+            width={38}
+            height={38}
+            style={{ objectFit: 'contain' }}
+          />
         </div>
+
         {!collapsed && (
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', lineHeight: '1.2' }}>KaavalAI</div>
-            <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 500 }}>KSP SCRB Intelligence</div>
+          <div style={{ overflow: 'hidden', animation: 'fadeIn 0.25s ease' }}>
+            <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
+              KaavalAI
+            </div>
+            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.75)', fontWeight: 600, marginTop: '2px' }}>
+              Karnataka State Police
+            </div>
           </div>
         )}
       </div>
 
-      {/* Nav Links */}
-      <nav style={{ flex: 1, padding: '8px' }}>
-        {NAV_ITEMS.map(item => {
+      {/* Nav Label */}
+      {!collapsed && (
+        <div style={{
+          padding: '14px 18px 6px',
+          fontSize: '10px',
+          fontWeight: 800,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: '#C8960C',
+        }}>
+          Intelligence Modules
+        </div>
+      )}
+
+      {/* Navigation Items */}
+      <nav style={{ flex: 1, padding: collapsed ? '12px 8px' : '6px 10px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '9px 10px', borderRadius: '8px', marginBottom: '2px',
-                background: isActive ? '#eff6ff' : 'transparent',
-                color: isActive ? '#1d4ed8' : '#64748b',
-                transition: 'all 0.15s',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap', overflow: 'hidden',
+            <Link
+              key={item.href}
+              href={item.href}
+              title={collapsed ? item.label : undefined}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: collapsed ? '0' : '12px',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                padding: collapsed ? '11px' : '10px 12px',
+                borderRadius: '0.625rem',
+                background: isActive ? 'linear-gradient(135deg, #8B1A1A 0%, #A52020 100%)' : 'transparent',
+                color: isActive ? '#fff' : '#5C3D2E',
+                fontWeight: isActive ? 700 : 500,
+                fontSize: '13px',
+                textDecoration: 'none',
+                transition: 'all 0.2s ease',
+                position: 'relative',
+                borderLeft: isActive ? '3px solid #C8960C' : '3px solid transparent',
+                boxShadow: isActive ? '0 4px 14px rgba(139,26,26,0.25)' : 'none',
               }}
-              onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = '#f8fafc'; }}
-              onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-              >
-                <span style={{
-                  minWidth: '18px', color: isActive ? '#1d4ed8' : '#94a3b8',
-                }}>
-                  {item.icon}
-                </span>
-                {!collapsed && (
-                  <>
-                    <span style={{ fontSize: '12px', fontWeight: isActive ? 700 : 500, flex: 1 }}>
-                      {item.label}
+              onMouseEnter={e => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = '#FFF8EF';
+                  (e.currentTarget as HTMLElement).style.color = '#8B1A1A';
+                }
+              }}
+              onMouseLeave={e => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = 'transparent';
+                  (e.currentTarget as HTMLElement).style.color = '#5C3D2E';
+                }
+              }}
+            >
+              <span style={{ flexShrink: 0, opacity: isActive ? 1 : 0.75 }}>{item.icon}</span>
+              {!collapsed && (
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', lineHeight: 1.2 }}>{item.label}</span>
+                  {item.sublabel && (
+                    <span style={{
+                      display: 'block',
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      opacity: 0.65,
+                      marginTop: '1px',
+                    }}>
+                      {item.sublabel}
                     </span>
-                    {item.badge && (
-                      <span style={{
-                        background: item.badgeColor || '#64748b',
-                        color: '#fff', fontSize: '8px', fontWeight: 700,
-                        padding: '1px 5px', borderRadius: '4px',
-                        letterSpacing: '0.05em',
-                      }}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </>
-                )}
-              </div>
+                  )}
+                </span>
+              )}
+              {!collapsed && item.badge && BADGE_COLOR[item.badge] && (
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: 800,
+                  padding: '2px 6px',
+                  borderRadius: '20px',
+                  background: BADGE_COLOR[item.badge].bg,
+                  color: BADGE_COLOR[item.badge].text,
+                  letterSpacing: '0.05em',
+                  flexShrink: 0,
+                }}>
+                  {item.badge}
+                </span>
+              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* Catalyst status footer */}
+      {/* Divider & KSP Info */}
       {!collapsed && (
         <div style={{
-          padding: '10px 12px', borderTop: '1px solid #f1f5f9',
-          margin: '8px',
+          padding: '12px 16px',
+          borderTop: '1px solid #F2E8D9',
+          background: '#FFF8EF',
         }}>
-          <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-            Catalyst Services
-          </div>
-          {[
-            { dot: '#059669', label: 'AppSail Runtime' },
-            { dot: '#1d4ed8', label: 'Data Store (SQLite)' },
-            { dot: '#d97706', label: 'ML Engine Active' },
-          ].map((s, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: s.dot }} />
-              <span style={{ fontSize: '10px', color: '#64748b' }}>{s.label}</span>
+          <div style={{ fontSize: '10px', color: '#9B7560', fontWeight: 600, lineHeight: 1.5 }}>
+            <div style={{ color: '#C8960C', fontWeight: 800, fontSize: '11px', marginBottom: '2px' }}>
+              SCRB Intelligence Platform
             </div>
-          ))}
+            <div>Project ID: 56816000000013052</div>
+            <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
+              <span style={{ color: '#065F46', fontWeight: 700 }}>All Systems Operational</span>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Collapse toggle */}
+      {/* Collapse Toggle */}
       <button
-        onClick={() => setCollapsed(!collapsed)}
+        onClick={() => setCollapsed(c => !c)}
         style={{
-          margin: '8px', padding: '8px', border: '1px solid #e2e8f0',
-          borderRadius: '8px', background: '#f8fafc', cursor: 'pointer',
-          color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '10px',
+          padding: '8px',
+          background: '#FFF8EF',
+          border: '1px solid #E8D4BA',
+          borderRadius: '0.5rem',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#8B1A1A',
+          transition: 'all 0.2s ease',
+          fontSize: '12px',
+          fontWeight: 700,
+          gap: '5px',
         }}
+        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
-        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        {collapsed ? <ChevronRight size={15} /> : <><ChevronLeft size={15} /><span>Collapse</span></>}
       </button>
-    </div>
+    </aside>
   );
 }

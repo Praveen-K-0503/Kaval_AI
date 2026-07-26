@@ -403,7 +403,16 @@ def generate_synthetic_firs(cursor, num_records=3000):
         gravity_id = 1 if major_head_id in [1, 2] else 2
         status_id = random.choice([1, 2, 3])
         
-        facts = f"Incident reported near district landmark in {dist[1]}. Modus operandi under classification {major_head_id}."
+        mo_templates = [
+            "Armed robbery reported at commercial establishment near district landmark in {dist}. Suspects fled on motorbikes.",
+            "Night house burglary through terrace window in {dist}. Gold ornaments and cash stolen.",
+            "Vehicle theft using duplicate master keys near parking zone in {dist}.",
+            "Cyber fraud and UPI phishing via fake banking OTP call targeting citizen in {dist}.",
+            "Chain snatching incident by two unidentified helmeted riders near main road in {dist}.",
+            "Narcotics and illegal contraband seizure during highway patrol checkpoint in {dist}.",
+            "Extortion call and threat demanding illegal syndicate protection money in {dist}."
+        ]
+        facts = random.choice(mo_templates).format(dist=dist[1])
         
         cursor.execute("""
             INSERT INTO CaseMaster (

@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shield, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/apiConfig';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API = API_BASE_URL;
 
 const ROLES = [
   { id: 'scrb_chief', label: 'SCRB Director / Chief', color: '#1d4ed8' },

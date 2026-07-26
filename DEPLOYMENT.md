@@ -1,4 +1,12 @@
-# KaavalAI — Phase 5: AppSail Deployment Guide
+## Live Catalyst Serverless Functions Status
+
+- Project: **KaavalAI-KSP** (Project ID: `56816000000013052`, Environment: `60080028417`)
+- Deployed Serverless Functions:
+  - `nightly_ml_refresh`: `https://kaavalai-ksp-60080028417.development.catalystserverless.in/server/nightly_ml_refresh/execution`
+  - `red_zone_alert`: `https://kaavalai-ksp-60080028417.development.catalystserverless.in/server/red_zone_alert/execution`
+  - `weekly_summary_report`: `https://kaavalai-ksp-60080028417.development.catalystserverless.in/server/weekly_summary_report/execution`
+
+---
 
 ## Step 1: Deploy Frontend via Catalyst Slate (GitHub Integration)
 

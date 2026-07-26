@@ -1,20 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  ShieldCheck, 
-  Building2, 
-  Users, 
-  AlertTriangle, 
-  Clock, 
-  Download, 
-  Cpu,
-  Activity,
-  UserCheck,
-  Radio,
-  Send,
-  CheckCircle2,
-  Bell
+import Image from 'next/image';
+import {
+  Clock, UserCheck, Download, Radio, Send,
+  CheckCircle2, Shield, AlertTriangle, Bell
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 
@@ -34,82 +24,72 @@ interface KPIProps {
 }
 
 export default function CommandHeader({ kpi, onOpenCatalyst, activeRole = 'SCRB Director', onRoleChange }: KPIProps) {
-  const [time, setTime] = useState<string>('');
-  const [exporting, setExporting] = useState<boolean>(false);
-  const [selectedRole, setSelectedRole] = useState<string>(activeRole);
-  const [showBroadcastModal, setShowBroadcastModal] = useState<boolean>(false);
-  const [broadcastTarget, setBroadcastTarget] = useState<string>('Bengaluru City - Subhedar Chatra PS');
-  const [broadcastMessage, setBroadcastMessage] = useState<string>('RED ZONE ALERT: High risk robbery pattern detected. Deploy 2 addl beat patrols immediately.');
-  const [broadcastSent, setBroadcastSent] = useState<boolean>(false);
+  const [time, setTime] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(activeRole);
+  const [showBroadcast, setShowBroadcast] = useState(false);
+  const [broadcastTarget, setBroadcastTarget] = useState('Bengaluru City — Subhedar Chatra PS');
+  const [broadcastMessage, setBroadcastMessage] = useState('RED ZONE ALERT: High risk robbery pattern detected. Deploy 2 addl beat patrols immediately.');
+  const [broadcastSent, setBroadcastSent] = useState(false);
+  const [showAlert, setShowAlert] = useState(true);
 
   useEffect(() => {
-    const updateTime = () => {
+    const tick = () => {
       const now = new Date();
       setTime(now.toLocaleTimeString('en-IN', { hour12: false }) + ' IST');
     };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  const handleRoleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const r = e.target.value;
-    setSelectedRole(r);
-    if (onRoleChange) onRoleChange(r);
-  };
 
   const handleExportPDF = async () => {
     setExporting(true);
     try {
       const doc = new jsPDF('p', 'mm', 'a4');
-      doc.setFillColor(11, 15, 25);
-      doc.rect(0, 0, 210, 297, 'F');
-
-      // Title Banner
-      doc.setTextColor(234, 179, 8); // Gold
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(20);
-      doc.text('KARNATAKA STATE POLICE — SCRB INTELLIGENCE BRIEF', 14, 20);
-
-      doc.setFontSize(10);
-      doc.setTextColor(148, 163, 184);
-      doc.text(`Generated: ${new Date().toLocaleString('en-IN')} | Role: ${selectedRole}`, 14, 28);
-      doc.text('Confidential — For Internal Police Officer Use Only', 14, 33);
-
-      doc.setDrawColor(234, 179, 8);
-      doc.setLineWidth(0.5);
-      doc.line(14, 36, 196, 36);
-
-      // Section: Key Stats
+      doc.setFillColor(139, 26, 26);
+      doc.rect(0, 0, 210, 38, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text('EXECUTIVE CRIME METRICS SUMMARY', 14, 45);
+      doc.setFontSize(18);
+      doc.text('KARNATAKA STATE POLICE — SCRB', 14, 16);
+      doc.setFontSize(11);
+      doc.text('KaavalAI Intelligence Platform — Executive Crime Brief', 14, 24);
+      doc.setFontSize(9);
+      doc.setTextColor(220, 180, 130);
+      doc.text(`Generated: ${new Date().toLocaleString('en-IN')} | Logged in as: ${selectedRole}`, 14, 32);
+
+      doc.setTextColor(28, 10, 0);
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.text('EXECUTIVE CRIME METRICS', 14, 52);
+
+      doc.setDrawColor(200, 150, 12);
+      doc.setLineWidth(0.6);
+      doc.line(14, 55, 196, 55);
 
       const metrics = [
-        [`Total Registered FIRs`, `${kpi.total_firs.toLocaleString()}`],
-        [`Heinous Offences Recorded`, `${kpi.heinous_crimes}`],
-        [`Active Accused Profiles`, `${kpi.total_accused.toLocaleString()}`],
-        [`Jurisdictional Police Stations`, `${kpi.total_stations}`],
-        [`Active Red-Zone Hotspots`, `${kpi.active_red_zones}`],
-        [`Predictive Crime Risk Index`, `${kpi.predictive_risk_index}% (HIGH)`],
+        ['Total Registered FIRs', `${kpi.total_firs.toLocaleString()}`],
+        ['Heinous Offences Recorded', `${kpi.heinous_crimes}`],
+        ['Active Accused Profiles', `${kpi.total_accused.toLocaleString()}`],
+        ['Jurisdictional Police Stations', `${kpi.total_stations}`],
+        ['Active Red-Zone Hotspots', `${kpi.active_red_zones}`],
+        ['Predictive Risk Index (XGBoost)', `${kpi.predictive_risk_index}%`],
       ];
 
-      let y = 54;
+      let y = 65;
       metrics.forEach(([label, val]) => {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
-        doc.setTextColor(203, 213, 225);
+        doc.setTextColor(92, 61, 46);
         doc.text(label, 14, y);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(234, 179, 8);
-        doc.text(val, 140, y);
-        y += 8;
+        doc.setTextColor(139, 26, 26);
+        doc.text(val, 155, y);
+        y += 10;
       });
 
       doc.save(`KSP_SCRB_Executive_Brief_${Date.now()}.pdf`);
-    } catch (e) {
-      console.error(e);
     } finally {
       setExporting(false);
     }
@@ -120,155 +100,253 @@ export default function CommandHeader({ kpi, onOpenCatalyst, activeRole = 'SCRB 
     setBroadcastSent(true);
     setTimeout(() => {
       setBroadcastSent(false);
-      setShowBroadcastModal(false);
-    }, 2000);
+      setShowBroadcast(false);
+    }, 2200);
   };
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-[#0b0f19]/90 backdrop-blur-md border-b border-yellow-500/20 px-4 lg:px-8 py-3.5 shadow-2xl">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          
-          {/* Brand & Live Badge */}
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#1e293b] border border-yellow-500/40 rounded-xl glow-gold text-yellow-400">
-              <ShieldCheck className="w-7 h-7" />
+      {/* KSP Maroon Command Header */}
+      <header style={{
+        background: 'linear-gradient(135deg, #8B1A1A 0%, #A52020 60%, #8B1A1A 100%)',
+        borderBottom: '3px solid #C8960C',
+        padding: '0 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        minHeight: '64px',
+        gap: '16px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 40,
+        boxShadow: '0 4px 20px rgba(139,26,26,0.3)',
+      }}>
+
+        {/* Left — KSP Brand + Title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '40px', height: '40px',
+            borderRadius: '50%',
+            background: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 0 3px rgba(200,150,12,0.5)',
+            overflow: 'hidden',
+            flexShrink: 0,
+          }}>
+            <Image src="/ksp-logo.jpg" alt="KSP" width={36} height={36} style={{ objectFit: 'contain' }} />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h1 style={{ fontSize: '17px', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
+                KaavalAI
+              </h1>
+              <span style={{
+                fontSize: '10px', fontWeight: 700, padding: '2px 8px',
+                borderRadius: '20px', background: 'rgba(200,150,12,0.25)',
+                border: '1px solid rgba(200,150,12,0.5)', color: '#F7E8B0',
+                letterSpacing: '0.05em',
+              }}>
+                SCRB v2.4
+              </span>
+              <span style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                fontSize: '10px', fontWeight: 700,
+                color: '#6EE7B7', background: 'rgba(16,185,129,0.15)',
+                border: '1px solid rgba(16,185,129,0.3)',
+                padding: '2px 8px', borderRadius: '20px',
+              }}>
+                <span style={{
+                  width: '6px', height: '6px', borderRadius: '50%',
+                  background: '#34D399', display: 'inline-block',
+                  boxShadow: '0 0 6px rgba(52,211,153,0.7)',
+                }} />
+                LIVE
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
-                  KaavalAI <span className="text-yellow-400 font-mono text-xs px-2 py-0.5 rounded bg-yellow-500/10 border border-yellow-500/30">KSP v2.4</span>
-                </h1>
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  LIVE COMMAND
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 font-medium">
-                Karnataka State Police — SCRB Intelligence & Predictive Analytics Platform
-              </p>
-            </div>
+            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.65)', margin: 0, fontWeight: 500 }}>
+              Karnataka State Police · Predictive Intelligence Command Suite
+            </p>
+          </div>
+        </div>
+
+        {/* Right — Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+
+          {/* IST Clock */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '6px 12px', background: 'rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px',
+            fontSize: '12px', fontFamily: "'DM Mono', monospace", color: '#F7E8B0',
+          }}>
+            <Clock size={13} style={{ opacity: 0.8 }} />
+            {time}
           </div>
 
-          {/* Quick Actions & Role Switcher */}
-          <div className="flex flex-wrap items-center gap-3">
-            
-            {/* Live Clock */}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/80 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">
-              <Clock className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
-              <span>{time}</span>
-            </div>
-
-            {/* Officer Role Selector */}
-            <div className="flex items-center gap-2 bg-slate-900 border border-yellow-500/30 rounded-lg px-2 py-1">
-              <UserCheck className="w-3.5 h-3.5 text-yellow-400" />
-              <select
-                value={selectedRole}
-                onChange={handleRoleSelect}
-                className="bg-transparent text-xs font-semibold text-slate-200 outline-none cursor-pointer pr-1"
-              >
-                <option value="SCRB Director" className="bg-slate-900 text-white">SCRB Director</option>
-                <option value="DGP Karnataka" className="bg-slate-900 text-white">DGP Karnataka</option>
-                <option value="SP Bengaluru City" className="bg-slate-900 text-white">SP Bengaluru City</option>
-                <option value="Inspector General (STF)" className="bg-slate-900 text-white">Inspector General (STF)</option>
-              </select>
-            </div>
-
-            {/* Emergency Alert Dispatch Trigger Button */}
-            <button
-              onClick={() => setShowBroadcastModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/90 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition shadow-lg glow-red pulse-badge"
+          {/* Role Selector */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(200,150,12,0.4)',
+            borderRadius: '8px', padding: '5px 10px',
+          }}>
+            <UserCheck size={13} style={{ color: '#F7E8B0', opacity: 0.85 }} />
+            <select
+              value={selectedRole}
+              onChange={e => {
+                setSelectedRole(e.target.value);
+                onRoleChange?.(e.target.value);
+              }}
+              style={{
+                background: 'transparent', border: 'none', outline: 'none',
+                fontSize: '12px', fontWeight: 700, color: '#fff', cursor: 'pointer',
+              }}
             >
-              <Radio className="w-3.5 h-3.5" />
-              <span>Broadcast Alert</span>
-            </button>
-
-            {/* Export Dossier PDF */}
-            <button
-              onClick={handleExportPDF}
-              disabled={exporting}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold rounded-lg text-xs transition shadow-md glow-gold"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>{exporting ? 'Generating...' : 'Export Dossier'}</span>
-            </button>
-
-            {/* Catalyst Backend Info Drawer trigger */}
-            <button
-              onClick={onOpenCatalyst}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition"
-            >
-              <Cpu className="w-3.5 h-3.5 text-yellow-400" />
-              <span>Catalyst Cloud</span>
-            </button>
-
+              <option value="SCRB Director" style={{ background: '#8B1A1A', color: '#fff' }}>SCRB Director</option>
+              <option value="DGP Karnataka" style={{ background: '#8B1A1A', color: '#fff' }}>DGP Karnataka</option>
+              <option value="SP Bengaluru City" style={{ background: '#8B1A1A', color: '#fff' }}>SP Bengaluru City</option>
+              <option value="IG (STF)" style={{ background: '#8B1A1A', color: '#fff' }}>IG (STF)</option>
+            </select>
           </div>
+
+          {/* Emergency Alert */}
+          <button
+            onClick={() => setShowBroadcast(true)}
+            className="pulse-badge"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '7px 14px',
+              background: '#DC2626', color: '#fff',
+              border: '1.5px solid #EF4444',
+              borderRadius: '8px', fontSize: '12px', fontWeight: 800,
+              cursor: 'pointer', letterSpacing: '0.02em',
+              boxShadow: '0 0 16px rgba(220,38,38,0.4)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <Radio size={13} />
+            Alert Dispatch
+          </button>
+
+          {/* Export PDF */}
+          <button
+            onClick={handleExportPDF}
+            disabled={exporting}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '7px 14px',
+              background: '#C8960C', color: '#1C0A00',
+              border: 'none',
+              borderRadius: '8px', fontSize: '12px', fontWeight: 800,
+              cursor: 'pointer',
+              boxShadow: '0 2px 12px rgba(200,150,12,0.35)',
+              transition: 'all 0.2s ease',
+              opacity: exporting ? 0.75 : 1,
+            }}
+          >
+            <Download size={13} />
+            {exporting ? 'Generating...' : 'Export Brief'}
+          </button>
+
+          {/* Catalyst Drawer */}
+          <button
+            onClick={onOpenCatalyst}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '7px 12px',
+              background: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: '8px', fontSize: '12px', fontWeight: 600,
+              color: '#fff', cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <Shield size={13} style={{ color: '#F7E8B0' }} />
+            Catalyst Cloud
+          </button>
+
         </div>
       </header>
 
-      {/* Emergency Broadcast Alert Modal */}
-      {showBroadcastModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[#111827] border border-red-500/40 rounded-2xl p-6 max-w-md w-full shadow-2xl glow-red">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
-              <div className="flex items-center gap-2.5 text-red-400">
-                <AlertTriangle className="w-6 h-6 animate-bounce" />
-                <h3 className="text-lg font-extrabold tracking-wide text-white">EMERGENCY POLICE BROADCAST</h3>
+      {/* Alert Ticker Bar */}
+      {showAlert && (
+        <div style={{
+          background: '#FEF3C7',
+          borderBottom: '1px solid #FDE68A',
+          padding: '7px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '12px',
+          fontWeight: 600,
+          color: '#92400E',
+          gap: '10px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+            <AlertTriangle size={14} style={{ color: '#D97706', flexShrink: 0 }} />
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              🔴 <strong>RED ZONE ALERT:</strong> Bengaluru City (Risk: 88/100) · Kalaburagi (Risk: 85/100) · Mangaluru (Risk: 82/100) — Enhanced patrol deployment recommended
+            </span>
+          </div>
+          <button onClick={() => setShowAlert(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#B45309', fontWeight: 700, fontSize: '14px', flexShrink: 0 }}>✕</button>
+        </div>
+      )}
+
+      {/* Emergency Broadcast Modal */}
+      {showBroadcast && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          background: 'rgba(28,10,0,0.55)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '16px',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          <div style={{
+            background: '#fff',
+            border: '2px solid #DC2626',
+            borderRadius: '16px',
+            padding: '28px',
+            maxWidth: '440px',
+            width: '100%',
+            boxShadow: '0 24px 60px rgba(220,38,38,0.25)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #FEE2E2', paddingBottom: '14px', marginBottom: '18px' }}>
+              <div style={{ width: '36px', height: '36px', background: '#FEE2E2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AlertTriangle size={18} style={{ color: '#DC2626' }} />
               </div>
-              <button 
-                onClick={() => setShowBroadcastModal(false)}
-                className="text-slate-400 hover:text-white font-mono text-sm px-2"
-              >
-                ✕
-              </button>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1C0A00' }}>Emergency Police Broadcast</h3>
+                <p style={{ margin: 0, fontSize: '11px', color: '#9B7560' }}>Karnataka State Police — Secure Alert Dispatch</p>
+              </div>
+              <button onClick={() => setShowBroadcast(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#9B7560', fontSize: '18px', lineHeight: 1 }}>✕</button>
             </div>
 
             {broadcastSent ? (
-              <div className="py-8 text-center space-y-3">
-                <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
-                <h4 className="text-lg font-bold text-white">ALERT DISPATCHED SUCCESSFULLY</h4>
-                <p className="text-xs text-slate-400">
-                  Signal broadcasted to 18 patrol vehicles & Control Room via Catalyst Wireless Signal.
-                </p>
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <CheckCircle2 size={48} style={{ color: '#10B981', margin: '0 auto 12px' }} />
+                <h4 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 800, color: '#065F46' }}>Alert Dispatched!</h4>
+                <p style={{ margin: 0, fontSize: '12px', color: '#6B7280' }}>Signal broadcast to 18 patrol vehicles via KSP Secure Command Radio.</p>
               </div>
             ) : (
-              <form onSubmit={handleSendBroadcast} className="space-y-4">
+              <form onSubmit={handleSendBroadcast} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Target Police Station / Zone</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#5C3D2E', marginBottom: '5px' }}>Target Station / Zone</label>
                   <input
-                    type="text"
-                    value={broadcastTarget}
-                    onChange={(e) => setBroadcastTarget(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:border-red-500 outline-none"
-                    required
+                    type="text" value={broadcastTarget} onChange={e => setBroadcastTarget(e.target.value)} required
+                    style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E8D4BA', borderRadius: '8px', fontSize: '13px', color: '#1C0A00', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
                   />
                 </div>
-
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Alert Message (High Priority)</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#5C3D2E', marginBottom: '5px' }}>Alert Message (High Priority)</label>
                   <textarea
-                    value={broadcastMessage}
-                    onChange={(e) => setBroadcastMessage(e.target.value)}
-                    rows={3}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:border-red-500 outline-none"
-                    required
+                    value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} required rows={3}
+                    style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E8D4BA', borderRadius: '8px', fontSize: '13px', color: '#1C0A00', outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
                   />
                 </div>
-
-                <div className="pt-2 flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowBroadcastModal(false)}
-                    className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition shadow-lg glow-red flex items-center justify-center gap-1.5"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Dispatch Red-Zone Alert</span>
+                <div style={{ display: 'flex', gap: '10px', paddingTop: '6px' }}>
+                  <button type="button" onClick={() => setShowBroadcast(false)} style={{ flex: 1, padding: '10px', background: '#F2E8D9', border: '1px solid #E8D4BA', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#5C3D2E', cursor: 'pointer' }}>Cancel</button>
+                  <button type="submit" style={{ flex: 1, padding: '10px', background: '#DC2626', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 800, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 14px rgba(220,38,38,0.35)' }}>
+                    <Send size={14} />Dispatch Alert
                   </button>
                 </div>
               </form>

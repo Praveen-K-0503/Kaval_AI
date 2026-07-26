@@ -1,0 +1,10 @@
+{
+  "deployment": {
+    "name": "weekly_summary_report",
+    "stack": "python3.10",
+    "type": "BasicIO"
+  },
+  "execution": {
+    "main": "index.py"
+  }
+}

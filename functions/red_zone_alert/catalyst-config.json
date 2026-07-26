@@ -1,0 +1,10 @@
+{
+  "deployment": {
+    "name": "red_zone_alert",
+    "stack": "python3.10",
+    "type": "BasicIO"
+  },
+  "execution": {
+    "main": "index.py"
+  }
+}

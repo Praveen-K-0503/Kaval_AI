@@ -495,8 +495,8 @@ class KSPMLEngine:
             max_features=2000,
             ngram_range=(1, 2),
             stop_words="english",
-            min_df=2,
-            max_df=0.95,
+            min_df=1,
+            max_df=1.0,
             sublinear_tf=True,
         )
 

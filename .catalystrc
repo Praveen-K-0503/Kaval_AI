@@ -14,6 +14,24 @@
   },
   "projects": [
     {
+      "idx": 2,
+      "id": "56816000000013024",
+      "name": "Project-Rainfall",
+      "domain": {
+        "id": "50044340683",
+        "name": "project-rainfall-60080028417.development"
+      },
+      "timezone": "Asia/Kolkata",
+      "env": [
+        {
+          "idx": 1,
+          "id": "60080028417",
+          "name": "Development",
+          "type": 3
+        }
+      ]
+    },
+    {
       "idx": 1,
       "id": "56816000000013052",
       "name": "KaavalAI-KSP",
@@ -27,7 +45,15 @@
           "idx": 1,
           "id": "60080028417",
           "name": "Development",
-          "type": 3
+          "type": 3,
+          "env_status": "Active",
+          "project_details": {
+            "project_name": "KaavalAI-KSP",
+            "id": "56816000000013052",
+            "project_type": "Live"
+          },
+          "is_default": true,
+          "action_required": false
         }
       ]
     }

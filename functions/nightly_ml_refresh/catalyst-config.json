@@ -1,0 +1,10 @@
+{
+  "deployment": {
+    "name": "nightly_ml_refresh",
+    "stack": "python3.10",
+    "type": "BasicIO"
+  },
+  "execution": {
+    "main": "index.py"
+  }
+}
