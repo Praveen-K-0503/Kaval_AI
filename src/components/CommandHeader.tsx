@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   Clock, UserCheck, Download, Radio, Send,
   CheckCircle2, Shield, AlertTriangle, Bell
@@ -263,6 +264,23 @@ export default function CommandHeader({ kpi, onOpenCatalyst, activeRole = 'SCRB 
             <Shield size={13} style={{ color: '#F7E8B0' }} />
             Catalyst Cloud
           </button>
+
+          {/* Admin Console Link */}
+          <Link
+            href="/admin"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '7px 12px',
+              background: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: '8px', fontSize: '12px', fontWeight: 600,
+              color: '#fff', cursor: 'pointer', textDecoration: 'none',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <Shield size={13} style={{ color: '#F7E8B0' }} />
+            Admin Console
+          </Link>
 
         </div>
       </header>

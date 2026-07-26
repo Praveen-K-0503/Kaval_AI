@@ -53,6 +53,7 @@ class SQLiteBackend:
     def __init__(self, db_path: str = DB_PATH):
         self.db_path = db_path
         self._ensure_db()
+        self._create_auth_audit_tables()
 
     def _ensure_db(self):
         if not os.path.exists(self.db_path):
@@ -61,6 +62,63 @@ class SQLiteBackend:
             build_database()
         else:
             logger.info(f"[SQLite] Database found: {self.db_path}")
+
+    def _create_auth_audit_tables(self):
+        conn = self.get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Users (
+                UserID INTEGER PRIMARY KEY AUTOINCREMENT,
+                Email TEXT UNIQUE NOT NULL,
+                PasswordHash TEXT NOT NULL,
+                Role TEXT NOT NULL,
+                CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS AuditLog (
+                LogID INTEGER PRIMARY KEY AUTOINCREMENT,
+                UserEmail TEXT,
+                Action TEXT NOT NULL,
+                Details TEXT,
+                Timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Evidence (
+                EvidenceID INTEGER PRIMARY KEY AUTOINCREMENT,
+                CaseMasterID INTEGER,
+                EvidenceName TEXT NOT NULL,
+                EvidenceType TEXT,
+                Status TEXT,
+                CollectedDate TEXT
+            );
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Investigations (
+                InvestigationID INTEGER PRIMARY KEY AUTOINCREMENT,
+                CaseMasterID INTEGER,
+                InvestigatingOfficerID INTEGER,
+                Status TEXT,
+                Summary TEXT,
+                LastUpdated TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+            """)
+            # Preseed a default user admin@ksp.gov.in / password123
+            cursor.execute("SELECT COUNT(*) FROM Users WHERE Email = 'admin@ksp.gov.in';")
+            if cursor.fetchone()[0] == 0:
+                from auth import get_password_hash
+                hashed_pw = get_password_hash("password123")
+                cursor.execute(
+                    "INSERT INTO Users (Email, PasswordHash, Role) VALUES (?, ?, ?);",
+                    ("admin@ksp.gov.in", hashed_pw, "scrb_chief")
+                )
+            conn.commit()
+        except Exception as e:
+            logger.error(f"Error seeding auth/audit tables: {e}")
+        finally:
+            conn.close()
 
     def get_connection(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path)
@@ -83,6 +141,16 @@ class SQLiteBackend:
             cursor.execute(query, params)
             row = cursor.fetchone()
             return dict(row) if row else None
+        finally:
+            conn.close()
+
+    def execute_write(self, query: str, params: tuple = ()) -> int:
+        conn = self.get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            conn.commit()
+            return cursor.lastrowid or cursor.rowcount
         finally:
             conn.close()
 
@@ -521,6 +589,15 @@ class KSPDatabaseAdapter:
             except Exception:
                 pass
         return self._sqlite_backend.query_one(query, params)
+
+    def execute_write(self, query: str, params: tuple = ()) -> int:
+        """Executes a write query on the active database backend."""
+        if hasattr(self._backend, "execute_write"):
+            try:
+                return self._backend.execute_write(query, params)
+            except Exception:
+                pass
+        return self._sqlite_backend.execute_write(query, params)
 
 
 # ── Singleton ─────────────────────────────────────────────────────────────

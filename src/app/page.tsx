@@ -1,422 +1,194 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import {
-  ShieldAlert, FileText, Network, MapPin, BarChart3,
-  Users, AlertTriangle, TrendingUp, Activity, ChevronRight,
-  Clock, Search, Printer, Radio, Flame, Sparkles, Layers, ShieldCheck
-} from 'lucide-react';
-import CommandHeader from '@/components/CommandHeader';
-import Map3D from '@/components/Map3D';
-import NetworkGraph3D from '@/components/NetworkGraph3D';
-import PredictiveDashboard from '@/components/PredictiveDashboard';
-import CatalystDrawer from '@/components/CatalystDrawer';
-import { API_BASE_URL } from '@/lib/apiConfig';
+import { Shield, Sparkles, Database, Network, Cpu, Lock, ArrowRight, Activity, Terminal } from 'lucide-react';
 
-const API = API_BASE_URL;
-
-function MetricCard({ label, value, sublabel, icon, color, trend, trendPositive, delay }: {
-  label: string; value: string | number; sublabel?: string;
-  icon: React.ReactNode; color: string; trend?: string; trendPositive?: boolean; delay?: number;
-}) {
+export default function LandingPage() {
   return (
-    <div
-      className="ksp-metric-card animate-slide-up"
-      style={{
-        animationDelay: `${delay || 0}ms`, opacity: 0, animationFillMode: 'forwards',
-        position: 'relative', overflow: 'hidden', padding: '18px 20px',
-        background: 'linear-gradient(145deg, #FFFFFF 0%, #FBF6EE 100%)',
-        border: '1px solid #E8D4BA', borderRadius: '16px',
-        boxShadow: '0 4px 16px rgba(139,26,26,0.04)',
-        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-      }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
-        (e.currentTarget as HTMLElement).style.boxShadow = `0 10px 25px ${color}18`;
-        (e.currentTarget as HTMLElement).style.borderColor = color;
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-        (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(139,26,26,0.04)';
-        (e.currentTarget as HTMLElement).style.borderColor = '#E8D4BA';
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px' }}>
-        <div style={{
-          width: '42px', height: '42px', borderRadius: '12px',
-          background: `linear-gradient(135deg, ${color}20 0%, ${color}10 100%)`,
-          border: `1.5px solid ${color}35`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', color,
-        }}>
-          {icon}
-        </div>
-        {trend && (
-          <span style={{
-            fontSize: '11px', fontWeight: 800, padding: '3px 8px', borderRadius: '12px',
-            background: trendPositive ? '#D1FAE5' : '#FEE2E2',
-            color: trendPositive ? '#065F46' : '#991B1B',
-            display: 'flex', alignItems: 'center', gap: '3px',
-          }}>
-            <TrendingUp size={12} style={{ transform: trendPositive ? 'none' : 'rotate(180deg)' }} />
-            {trend}
-          </span>
-        )}
-      </div>
-      <div style={{ fontSize: '28px', fontWeight: 800, color: '#1C0A00', fontFamily: "'DM Mono', monospace", letterSpacing: '-0.02em' }}>
-        {typeof value === 'number' ? value.toLocaleString() : value}
-      </div>
-      <div style={{ fontSize: '13px', fontWeight: 700, color: '#5C3D2E', marginTop: '4px' }}>{label}</div>
-      {sublabel && <div style={{ fontSize: '11px', color: '#9B7560', marginTop: '2px', fontWeight: 500 }}>{sublabel}</div>}
-    </div>
-  );
-}
-
-const QuickLink = ({ href, icon, label, desc, accent, badge }: { href: string; icon: React.ReactNode; label: string; desc: string; accent: string; badge?: string }) => (
-  <Link
-    href={href}
-    style={{
-      display: 'flex', alignItems: 'center', gap: '14px',
-      padding: '16px 18px',
-      background: '#ffffff',
-      border: '1px solid #E8D4BA',
-      borderRadius: '16px',
-      textDecoration: 'none',
-      transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-      boxShadow: '0 2px 10px rgba(139,26,26,0.04)',
-      borderLeft: `5px solid ${accent}`,
-      position: 'relative',
-    }}
-    onMouseEnter={e => {
-      (e.currentTarget as HTMLElement).style.borderColor = accent;
-      (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 24px ${accent}22`;
-      (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-    }}
-    onMouseLeave={e => {
-      (e.currentTarget as HTMLElement).style.borderColor = '#E8D4BA';
-      (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 10px rgba(139,26,26,0.04)';
-      (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-    }}
-  >
-    <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: `${accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: accent, flexShrink: 0 }}>
-      {icon}
-    </div>
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{ fontSize: '14px', fontWeight: 800, color: '#1C0A00' }}>{label}</div>
-        {badge && (
-          <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', background: `${accent}15`, color: accent, borderRadius: '8px', border: `1px solid ${accent}30` }}>
-            {badge}
-          </span>
-        )}
-      </div>
-      <div style={{ fontSize: '11px', color: '#9B7560', marginTop: '2px', fontWeight: 500 }}>{desc}</div>
-    </div>
-    <ChevronRight size={16} style={{ color: '#D4B896', flexShrink: 0 }} />
-  </Link>
-);
-
-// ── Fallback values shown while API loads ────────────────────────────────
-const KPI_FALLBACK = {
-  total_firs: 0, heinous_crimes: 0, total_accused: 0,
-  total_stations: 0, active_red_zones: 0,
-  repeat_offender_clusters: 0, predictive_risk_index: 0,
-};
-
-const PREDICTIVE_FALLBACK = {
-  forecast_period: 'Next 30 Days (FY 2025-26)',
-  model: 'XGBoost + Isolation Forest (Hybrid Ensemble)',
-  model_confidence: '—',
-  high_risk_districts: [] as any[],
-  anomalies: [] as any[],
-};
-
-export default function Home() {
-  const [catalystOpen, setCatalystOpen] = useState(false);
-  const [activeRole, setActiveRole] = useState('SCRB Director');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [leftTab, setLeftTab] = useState<'MAP' | 'CLOCK'>('MAP');
-
-  // ── Live API state ──────────────────────────────────────────────────────
-  const [kpi, setKpi] = useState(KPI_FALLBACK);
-  const [districts, setDistricts] = useState<any[]>([]);
-  const [predictiveData, setPredictiveData] = useState(PREDICTIVE_FALLBACK);
-  const [apiStatus, setApiStatus] = useState<'loading' | 'connected' | 'error'>('loading');
-
-  useEffect(() => {
-    const API = API_BASE_URL;
-
-    // 1. Fetch live KPI
-    fetch(`${API}/api/kpi`)
-      .then(r => r.json())
-      .then(d => {
-        setKpi(d);
-        setApiStatus('connected');
-      })
-      .catch(() => setApiStatus('error'));
-
-    // 2. Fetch districts
-    fetch(`${API}/api/districts`)
-      .then(r => r.json())
-      .then(d => {
-        const rows: any[] = d.districts || d;
-        setDistricts(rows.map((dist: any) => ({
-          district_id: dist.district_id ?? dist.DistrictID ?? dist.id,
-          district_name: dist.district_name ?? dist.DistrictName ?? dist.name,
-          lat: dist.lat ?? dist.latitude ?? 13.9,
-          lng: dist.lng ?? dist.longitude ?? 75.8,
-          crime_count: dist.crime_count ?? dist.totalFirs ?? 0,
-          risk_score: dist.risk_score ?? dist.riskScore ?? 0,
-          is_red_zone: dist.is_red_zone ?? dist.riskCategory === 'CRITICAL',
-          recommended_beat_patrols: dist.recommended_beat_patrols ?? Math.round((dist.risk_score ?? 0) * 0.4),
-        })));
-      })
-      .catch(() => {});
-
-    // 3. Fetch ML forecast for predictive panel
-    fetch(`${API}/api/ml/forecast?days=30`)
-      .then(r => r.json())
-      .then(forecast => {
-        fetch(`${API}/api/ml/anomalies`)
-          .then(r => r.json())
-          .then(anom => {
-            setPredictiveData({
-              forecast_period: forecast.forecast_period ?? 'Next 30 Days (FY 2025-26)',
-              model: forecast.model ?? 'XGBoost + Isolation Forest (Hybrid Ensemble)',
-              model_confidence: forecast.model_accuracy ? `${(forecast.model_accuracy * 100).toFixed(1)}%` : '94.8%',
-              high_risk_districts: forecast.high_risk_districts ?? [],
-              anomalies: anom.anomalies ?? anom ?? [],
-            });
-          })
-          .catch(() => {
-            setPredictiveData(prev => ({
-              ...prev,
-              forecast_period: forecast.forecast_period ?? prev.forecast_period,
-              model: forecast.model ?? prev.model,
-              high_risk_districts: forecast.high_risk_districts ?? [],
-            }));
-          });
-      })
-      .catch(() => {});
-  }, []);
-
-  const catalystServices = [
-    { name: 'Catalyst AppSail', status: 'Active', type: 'Managed Python & Next.js OCI Containers' },
-    { name: 'Catalyst Data Store', status: 'Active', type: '24-Table KSP Case Master Schema' },
-    { name: 'Catalyst Functions', status: 'Active', type: 'Nightly ML Refresh & Red-Zone Alert Handlers' },
-    { name: 'Catalyst Job Scheduling', status: 'Active', type: 'Cron Scheduler for Auto Re-Training' },
-    { name: 'Catalyst Zia AutoML', status: 'Active', type: 'Tabular Crime Risk & Spatiotemporal Predictor' },
-    { name: 'Catalyst API Gateway', status: 'Active', type: 'CORS Shield & Rate Limiter' },
-  ];
-
-  return (
-    <div style={{ minHeight: '100vh', background: '#FBF6EE', display: 'flex', flexDirection: 'column', fontFamily: "'Outfit', sans-serif" }}>
-
-      {/* Top Command Header */}
-      <CommandHeader
-        kpi={kpi}
-        onOpenCatalyst={() => setCatalystOpen(true)}
-        activeRole={activeRole}
-        onRoleChange={r => setActiveRole(r)}
-      />
-
-      {/* Live State Intelligence Ticker Bar */}
-      <div style={{
-        background: 'linear-gradient(90deg, #8B1A1A 0%, #5C1010 100%)',
-        color: '#FBF6EE',
-        padding: '8px 24px',
+    <div style={{
+      minHeight: '100vh',
+      background: '#FBF6EE',
+      color: '#1C0A00',
+      fontFamily: "'Outfit', 'Segoe UI', sans-serif",
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      {/* Navbar */}
+      <nav style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        fontSize: '12px',
-        fontWeight: 600,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        padding: '20px 48px',
+        background: '#ffffff',
+        borderBottom: '1px solid #E8D4BA',
+        boxShadow: '0 2px 10px rgba(139,26,26,0.03)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{
-            background: '#C8960C', color: '#1C0A00', fontWeight: 800, fontSize: '10px',
-            padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px'
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: '42px', height: '42px',
+            background: 'linear-gradient(135deg, #8B1A1A, #C8960C)',
+            borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '20px', boxShadow: '0 4px 10px rgba(139,26,26,0.2)'
+          }}>⚔️</div>
+          <div>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: '#8B1A1A', letterSpacing: '-0.02em' }}>KaavalAI</div>
+            <div style={{ fontSize: '10px', color: '#9B7560', fontWeight: 600 }}>KSP Intelligence Platform</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <Link href="/login" style={{ fontSize: '14px', fontWeight: 700, color: '#8B1A1A', textDecoration: 'none' }}>
+            Officer Portal
+          </Link>
+          <Link href="/command-center" style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '10px 20px', background: '#8B1A1A', color: '#ffffff',
+            borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+            textDecoration: 'none', boxShadow: '0 4px 12px rgba(139,26,26,0.25)',
+            transition: 'all 0.2s',
           }}>
-            LIVE TICKER
-          </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#F2E8D9' }}>
-            <Radio size={14} className="animate-pulse" style={{ color: '#FFD700' }} />
-            <span>SCRB Advisory: <strong>Peak Patrol Deployment Window 8PM–2AM</strong> — Deploy 60% officer fleet to Bengaluru City & Kalaburagi Red Zones.</span>
-          </div>
+            Command Center <ArrowRight size={15} />
+          </Link>
         </div>
+      </nav>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '11px', opacity: 0.9 }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={13} style={{ color: '#FFD700' }} />
-            XGBoost ML Accuracy: <strong style={{ color: '#FFD700' }}>{predictiveData.model_confidence}</strong>
-          </span>
-          <span>|</span>
-          <span style={{ color: '#F2E8D9' }}>Catalyst Cloud Sync: <strong style={{ color: apiStatus === 'connected' ? '#6EE7B7' : apiStatus === 'loading' ? '#FFD700' : '#FCA5A5' }}>{apiStatus === 'connected' ? 'Connected' : apiStatus === 'loading' ? 'Connecting…' : 'Offline — Local Mode'}</strong></span>
-        </div>
-      </div>
-
-      {/* Page Main Workspace */}
-      <main style={{ flex: 1, padding: '24px', maxWidth: '1650px', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
-
-        {/* Executive Action Toolbar */}
+      {/* Hero Section */}
+      <header style={{
+        padding: '80px 48px',
+        textAlign: 'center',
+        background: 'linear-gradient(180deg, #FFFFFF 0%, #FDFBF7 100%)',
+        borderBottom: '1px solid #E8D4BA',
+      }}>
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px',
-          background: '#ffffff', padding: '14px 20px', borderRadius: '16px', border: '1px solid #E8D4BA',
-          boxShadow: '0 2px 10px rgba(139,26,26,0.03)', marginBottom: '24px'
+          margin: '0 auto 20px', display: 'inline-flex', alignItems: 'center', gap: '8px',
+          padding: '6px 16px', background: '#FEF3C7', border: '1px solid #FCD34D',
+          borderRadius: '30px', fontSize: '12px', color: '#92400E', fontWeight: 800
         }}>
-          {/* Quick Search */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, maxWidth: '480px', background: '#FBF6EE', padding: '8px 14px', borderRadius: '10px', border: '1px solid #E8D4BA' }}>
-            <Search size={16} style={{ color: '#9B7560' }} />
-            <input
-              type="text"
-              placeholder="Search Crime Heads, FIR Numbers, Accused Aliases, or Police Stations..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '13px', color: '#1C0A00', fontWeight: 500 }}
-            />
+          <Sparkles size={14} /> Karnataka State Police · SCRB Intelligence Initiative
+        </div>
+        <h1 style={{
+          fontSize: '48px', fontWeight: 800, color: '#1C0A00',
+          maxWidth: '800px', margin: '0 auto 20px', lineHeight: '1.25',
+          letterSpacing: '-0.03em'
+        }}>
+          Next-Generation Crime Analysis & <span style={{ color: '#8B1A1A' }}>Predictive Intelligence</span>
+        </h1>
+        <p style={{
+          fontSize: '16px', color: '#9B7560', maxWidth: '640px',
+          margin: '0 auto 32px', lineHeight: '1.7', fontWeight: 500
+        }}>
+          KaavalAI integrates machine learning algorithms, geospatial mappings, and social link analysis to empower Karnataka law enforcement with real-time operational foresight.
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+          <Link href="/command-center" style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '14px 28px', background: '#8B1A1A', color: '#ffffff',
+            borderRadius: '12px', fontSize: '15px', fontWeight: 700,
+            textDecoration: 'none', boxShadow: '0 4px 16px rgba(139,26,26,0.3)',
+            transition: 'all 0.2s',
+          }}>
+            Access Command Center <ArrowRight size={16} />
+          </Link>
+          <a href="#architecture" style={{
+            padding: '14px 28px', background: '#F2E8D9', color: '#5C3D2E',
+            borderRadius: '12px', fontSize: '15px', fontWeight: 700,
+            textDecoration: 'none', border: '1px solid #E8D4BA', transition: 'all 0.2s',
+          }}>
+            Explore Architecture
+          </a>
+        </div>
+      </header>
+
+      {/* Grid Features */}
+      <section style={{ padding: '60px 48px', maxWidth: '1200px', margin: '0 auto' }}>
+        <h2 style={{ fontSize: '28px', fontWeight: 800, textAlign: 'center', color: '#1C0A00', marginBottom: '40px' }}>
+          Platform Capabilities
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+          {/* Card 1 */}
+          <div style={{ background: '#fff', border: '1px solid #E8D4BA', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(139,26,26,0.02)' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#8B1A1A15', color: '#8B1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <Shield size={20} />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1C0A00', marginBottom: '8px' }}>Command Dashboard</h3>
+            <p style={{ fontSize: '13px', color: '#9B7560', lineHeight: '1.6', fontWeight: 500 }}>
+              Live KPI status monitoring, emergency dispatch feed simulation, and spatial crime risk mapping compiled directly from Data Store.
+            </p>
           </div>
-
-          {/* Action Launcher Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Link href="/firs" style={{
-              display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px',
-              background: '#8B1A1A', color: '#ffffff', borderRadius: '10px', fontSize: '12px', fontWeight: 700,
-              textDecoration: 'none', transition: 'all 0.2s ease', boxShadow: '0 2px 8px rgba(139,26,26,0.2)'
-            }}>
-              <FileText size={15} /> Search FIR Vault
-            </Link>
-
-            <Link href="/beat-patrol" style={{
-              display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px',
-              background: '#C8960C', color: '#1C0A00', borderRadius: '10px', fontSize: '12px', fontWeight: 800,
-              textDecoration: 'none', transition: 'all 0.2s ease'
-            }}>
-              <MapPin size={15} /> Launch Patrol Optimizer
-            </Link>
-
-            <button
-              onClick={() => window.print()}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 14px',
-                background: '#F2E8D9', color: '#5C3D2E', borderRadius: '10px', fontSize: '12px', fontWeight: 700,
-                border: '1px solid #E8D4BA', cursor: 'pointer', transition: 'all 0.2s ease'
-              }}
-            >
-              <Printer size={15} /> Executive Brief
-            </button>
+          {/* Card 2 */}
+          <div style={{ background: '#fff', border: '1px solid #E8D4BA', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(139,26,26,0.02)' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#C8960C15', color: '#C8960C', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <Network size={20} />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1C0A00', marginBottom: '8px' }}>3D Syndicate Graphs</h3>
+            <p style={{ fontSize: '13px', color: '#9B7560', lineHeight: '1.6', fontWeight: 500 }}>
+              NetworkX PageRank centrality calculations mapped onto a WebGL 3D interface to expose repeat accused cohorts and ringleaders.
+            </p>
+          </div>
+          {/* Card 3 */}
+          <div style={{ background: '#fff', border: '1px solid #E8D4BA', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 12px rgba(139,26,26,0.02)' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#2D501615', color: '#2D5016', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <Cpu size={20} />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1C0A00', marginBottom: '8px' }}>On-Demand Analytics</h3>
+            <p style={{ fontSize: '13px', color: '#9B7560', lineHeight: '1.6', fontWeight: 500 }}>
+              Live DBSCAN spatial clustering and XGBoost time-series regression models run directly against the active database records.
+            </p>
           </div>
         </div>
+      </section>
 
-        {/* KPI Metric Cards — live from /api/kpi */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-          <MetricCard label="Total FIRs Registered" value={kpi.total_firs || '—'} sublabel="FY 2025-26 · All 31 Districts" icon={<FileText size={20} />} color="#8B1A1A" trend={kpi.total_firs ? '+Live' : 'Loading…'} trendPositive={false} delay={0} />
-          <MetricCard label="Heinous Offences" value={kpi.heinous_crimes || '—'} sublabel="Active Investigations" icon={<ShieldAlert size={20} />} color="#DC2626" trend={kpi.heinous_crimes ? 'Live' : '…'} trendPositive={true} delay={60} />
-          <MetricCard label="Active Accused" value={kpi.total_accused || '—'} sublabel="All Active Cases" icon={<Users size={20} />} color="#C8960C" trend={kpi.total_accused ? 'Live' : '…'} trendPositive={true} delay={120} />
-          <MetricCard label="Police Stations" value={kpi.total_stations || '—'} sublabel="Karnataka Coverage" icon={<MapPin size={20} />} color="#2D5016" trend={kpi.total_stations ? 'Operational' : '…'} trendPositive={true} delay={180} />
-          <MetricCard label="Active Red Zones" value={kpi.active_red_zones || '—'} sublabel="CRITICAL Risk Districts" icon={<AlertTriangle size={20} />} color="#DC2626" trend={kpi.active_red_zones ? 'Priority 1' : '…'} trendPositive={false} delay={240} />
-          <MetricCard label="Predictive Risk Index" value={kpi.predictive_risk_index ? `${kpi.predictive_risk_index}%` : '—'} sublabel={`Model Confidence: ${predictiveData.model_confidence}`} icon={<Activity size={20} />} color="#B87333" trend={apiStatus === 'connected' ? 'Live' : apiStatus === 'loading' ? 'Loading…' : 'Offline'} trendPositive={apiStatus === 'connected'} delay={300} />
-        </div>
+      {/* Tech Stack & Architecture Section */}
+      <section id="architecture" style={{ background: '#ffffff', borderTop: '1px solid #E8D4BA', borderBottom: '1px solid #E8D4BA', padding: '80px 48px' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#1C0A00', textAlign: 'center', marginBottom: '16px' }}>
+            System Architecture & Technology Stack
+          </h2>
+          <p style={{ fontSize: '15px', color: '#9B7560', textAlign: 'center', maxWidth: '640px', margin: '0 auto 48px', lineHeight: '1.7', fontWeight: 500 }}>
+            KaavalAI leverage serverless cloud features paired with machine learning algorithms to process large law enforcement datasets cleanly.
+          </p>
 
-        {/* Quick Navigation Cards Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px', marginBottom: '24px' }}>
-          <QuickLink href="/network" icon={<Network size={20} />} label="3D Syndicate Network" desc="Organised crime linkage graph" accent="#8B1A1A" badge="3D Graph" />
-          <QuickLink href="/beat-patrol" icon={<MapPin size={20} />} label="Beat Patrol Optimizer" desc="Dijkstra route & deployment" accent="#C8960C" badge="Leaflet Map" />
-          <QuickLink href="/firs" icon={<FileText size={20} />} label="FIR Intelligence Vault" desc="MO search & case dossiers" accent="#2D5016" badge="24 Tables" />
-          <QuickLink href="/analytics" icon={<BarChart3 size={20} />} label="SCRB Crime Analytics" desc="30-day XGBoost forecasting" accent="#B87333" badge="4 Tabs" />
-        </div>
-
-        {/* Main 2-Column Visual Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
-
-          {/* Left Column Panel: Spatiotemporal Risk Heatmap / Clock Toggle */}
-          <div className="ksp-panel animate-slide-up" style={{ animationDelay: '100ms', opacity: 0, animationFillMode: 'forwards', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid #F2E8D9' }}>
-              <div>
-                <div className="section-heading">Spatiotemporal Intelligence</div>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#1C0A00', marginTop: '2px' }}>31 District Crime Density & Risk Index</div>
-              </div>
-
-              {/* Toggle Selector */}
-              <div style={{ display: 'flex', alignItems: 'center', background: '#FBF6EE', padding: '3px', borderRadius: '10px', border: '1px solid #E8D4BA' }}>
-                <button
-                  onClick={() => setLeftTab('MAP')}
-                  style={{
-                    padding: '4px 12px', fontSize: '11px', fontWeight: 700, borderRadius: '8px', border: 'none', cursor: 'pointer',
-                    background: leftTab === 'MAP' ? '#8B1A1A' : 'transparent',
-                    color: leftTab === 'MAP' ? '#ffffff' : '#5C3D2E',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  🗺️ 3D Map
-                </button>
-                <Link
-                  href="/analytics"
-                  style={{
-                    padding: '4px 12px', fontSize: '11px', fontWeight: 700, borderRadius: '8px', border: 'none', textDecoration: 'none',
-                    color: '#5C3D2E', display: 'flex', alignItems: 'center', gap: '4px'
-                  }}
-                >
-                  🕐 Crime Clock
-                </Link>
-              </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#8B1A1A', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Terminal size={18} /> Frontend & Client Portal
+              </h3>
+              <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', color: '#5C3D2E', fontWeight: 600 }}>
+                <li><strong>Next.js 14 (React):</strong> Client router, optimized bundle sizes, and state synchronization.</li>
+                <li><strong>Leaflet Maps:</strong> Geospatial rendering of case markers, heatmaps, and optimized beat patrol paths.</li>
+                <li><strong>Three.js / 3D Force Graph:</strong> 3D WebGL linkage visualization of criminal relations.</li>
+                <li><strong>Tailwind CSS & Vanilla HSL:</strong> High-performance UI design utilizing official Karnataka Police colors.</li>
+              </ul>
             </div>
 
-            <div style={{ flex: 1, minHeight: '380px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #F2E8D9', position: 'relative' }}>
-              <Map3D districts={districts} />
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#C8960C', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Database size={18} /> Backend & Cloud Core
+              </h3>
+              <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', color: '#5C3D2E', fontWeight: 600 }}>
+                <li><strong>FastAPI (Python):</strong> Ultra-fast ASGI API framework for data retrieval and ML calculations.</li>
+                <li><strong>Zoho Catalyst Data Store:</strong> Cloud SQL database mapping KSP Case Master datasets.</li>
+                <li><strong>ML Engine:</strong> SciKit-Learn, XGBoost, and NetworkX libraries for dynamic threat predictive calculations.</li>
+                <li><strong>JWT & Role Guards:</strong> Industry-standard token-based protection and secure endpoint routing.</li>
+              </ul>
             </div>
           </div>
-
-          {/* Right Column Panel: 3D Criminal Network Preview */}
-          <div className="ksp-panel animate-slide-up" style={{ animationDelay: '200ms', opacity: 0, animationFillMode: 'forwards', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid #F2E8D9' }}>
-              <div>
-                <div className="section-heading">Criminal Syndicate Linkage</div>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#1C0A00', marginTop: '2px' }}>3D Gang Centrality & Network Graph</div>
-              </div>
-
-              <Link href="/network" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 700, color: '#8B1A1A', textDecoration: 'none', background: '#FFF8EF', padding: '5px 12px', borderRadius: '20px', border: '1px solid #E8D4BA' }}>
-                Inspect Network <ChevronRight size={12} />
-              </Link>
-            </div>
-            <div style={{ flex: 1, minHeight: '380px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #F2E8D9', background: '#FBF6EE' }}>
-              <NetworkGraph3D />
-            </div>
-          </div>
-
         </div>
-
-        {/* Predictive Analytics Panel */}
-        <div className="animate-slide-up" style={{ animationDelay: '300ms', opacity: 0, animationFillMode: 'forwards' }}>
-          <PredictiveDashboard data={predictiveData} />
-        </div>
-
-      </main>
+      </section>
 
       {/* Footer */}
       <footer style={{
-        background: '#fff', borderTop: '1px solid #E8D4BA',
-        padding: '16px 24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        fontSize: '12px', color: '#9B7560', flexWrap: 'wrap', gap: '12px',
+        marginTop: 'auto', background: '#ffffff', padding: '24px 48px',
+        borderTop: '1px solid #E8D4BA', display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', fontSize: '12px', color: '#9B7560',
       }}>
+        <div>© 2026 Karnataka State Police · SCRB Intelligence Initiative</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <ShieldCheck size={16} style={{ color: '#8B1A1A' }} />
-          <span style={{ color: '#8B1A1A', fontWeight: 700 }}>© 2026 Karnataka State Police · SCRB Intelligence Suite</span>
-          <span>|</span>
-          <span>Logged in as: <strong style={{ color: '#C8960C' }}>{activeRole}</strong></span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontFamily: "'DM Mono', monospace", fontSize: '11px' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#065F46', fontWeight: 800 }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
-            SYSTEM: OPERATIONAL
-          </span>
-          <span style={{ color: '#5C3D2E' }}>CATALYST CLOUD: CONNECTED</span>
-          <span style={{ color: '#9B7560' }}>PROJECT ID: 56816000000013052</span>
+          <Link href="/login" style={{ color: '#8B1A1A', textDecoration: 'none', fontWeight: 700 }}>
+            Login to Command Center
+          </Link>
         </div>
       </footer>
-
-      {/* Catalyst Drawer */}
-      <CatalystDrawer isOpen={catalystOpen} onClose={() => setCatalystOpen(false)} services={catalystServices} />
     </div>
   );
 }
