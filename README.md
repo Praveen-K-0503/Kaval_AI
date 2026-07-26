@@ -1,103 +1,102 @@
-# ⚔️ KaavalAI — Karnataka State Police AI Intelligence Suite
+# ⚔️ KaavalAI — Karnataka State Police Operational Intelligence & Analytics Platform
 
 > **KSP Datathon 2026 · Challenge 02 · Team:** Praveen K (praveen0503k@gmail.com)  
-> **Catalyst Project:** KaavalAI-KSP · Project ID: `56816000000013052`
+> **Zoho Catalyst Project:** `KaavalAI-KSP` (Project ID: `56816000000013052` · Org ID: `60080028417`)  
+> 🌐 **Live Slate Frontend Portal:** [https://kaval-ai-bptxfxwh.onslate.in](https://kaval-ai-bptxfxwh.onslate.in)  
+> ⚙️ **Live AppSail Backend Container:** [https://kaavalai-production-api-50044342834.development.catalystserverless.in](https://kaavalai-production-api-50044342834.development.catalystserverless.in)
 
 ---
 
-## 🚀 What This Does
+## 🎯 Executive Overview
 
-KaavalAI is a **real-time AI-powered crime analytics command center** for Karnataka State Police (KSP), built on Zoho Catalyst. It transforms raw FIR data into actionable intelligence using:
-
-| Feature | Technology |
-|---|---|
-| 30-Day Crime Forecast | XGBoost + Lag Features |
-| Spatial Hotspot Detection | DBSCAN (Haversine metric) |
-| Criminal Network Analysis | NetworkX PageRank + Betweenness Centrality |
-| MO (Modus Operandi) Search | TF-IDF 2-gram Cosine Similarity |
-| Anomaly Detection | Isolation Forest (contamination=0.10) |
-| Beat Patrol Optimization | Greedy Weighted Cluster Assignment |
-| Backend | FastAPI + Zoho Catalyst Data Store |
-| Frontend | Next.js 14 App Router |
-| Deployment | Zoho Catalyst AppSail + Slate |
+KaavalAI is an enterprise-grade, data-driven operational intelligence command suite for the **Karnataka State Police (KSP)**. Built natively on **Zoho Catalyst**, it transforms preseeded FIR databases into live, dynamic analytics, predictive crime risk maps, criminal syndicate graphs, and automated evidence management workflows.
 
 ---
 
-## 📁 Pages
+## 🚀 Key Modules & Capabilities
 
-| Route | Description |
-|---|---|
-| `/` | Command Center — KPI bar, crime map, network graph, AI dashboard |
-| `/firs` | FIR Registry — Search all 10,000+ FIRs by keyword/district/gravity |
-| `/firs/[id]` | FIR Detail — 24-table linked record (accused, victims, acts, arrests) |
-| `/analytics` | ML Analytics — XGBoost forecast, Isolation Forest, DBSCAN deep dive |
-| `/network` | 3D Criminal Network — WebGL graph with ringleader detection |
-| `/beat-patrol` | Beat Patrol Optimizer — Officer deployment by risk cluster |
-| `/login` | Secure Login — RBAC (SCRB Chief / SP / SHO / Analyst) |
+| Module | Core Technology | Description |
+|---|---|---|
+| **30-Day Crime Risk Forecast** | XGBoost + Spatiotemporal Lags | Computes daily crime trends and monthly district risk forecasts. |
+| **Spatial Hotspot Detection** | DBSCAN (Haversine Distance) | Identifies crime density cluster polygons and high-gravity zones. |
+| **Syndicate Network Analysis** | NetworkX (PageRank & Betweenness) | Uncovers criminal ringleaders and multi-node syndicate links. |
+| **Modus Operandi (MO) Search** | TF-IDF (2-gram) + Cosine Similarity | Matches crime MO descriptions against historical FIR facts. |
+| **Anomaly Detector** | Isolation Forest (`contamination=0.10`) | Flags statistical crime spikes and patrol gaps across 31 districts. |
+| **Beat Patrol Optimizer** | Dijkstra Weighted Allocator | Optimizes patrol beat distribution based on active risk clusters. |
+| **Evidence Store** | Catalyst Stratus File Store | Drag-and-drop evidence upload (Photos, Videos, PDFs) with metadata tracking. |
+| **PDF Case Briefs** | Catalyst SmartBrowz Engine | Compiles official KSP investigation briefs with analytical intel into downloadable PDFs. |
+| **Real-time Alerts** | WebSockets + Signals + Mail | Thread-safe WebSocket broadcaster pushing live updates to active command clients. |
 
 ---
 
-## 🛠️ Setup
+## 📁 Application Routing Architecture
 
-### Backend
+| Route | Access Level | Description |
+|---|---|---|
+| `/` | **Public** | Modern Landing Page showcasing KaavalAI features, architecture, and technology stack. |
+| `/command-center` | **Protected** | Main Operational Command Center dashboard with live KPI counters, maps, and graphs. |
+| `/login` | **Public** | JWT Security Portal supporting role login & **Catalyst Hosted Single Sign-On**. |
+| `/firs` | **Protected** | FIR Case Registry with full CRUD operations and evidence attachment drawers. |
+| `/firs/[id]` | **Protected** | Full 24-table linked FIR record details (Accused, Victims, Acts, Officers). |
+| `/analytics` | **Protected** | ML Predictors dashboard featuring XGBoost, Isolation Forest, and DBSCAN clusters. |
+| `/network` | **Protected** | Interactive 3D criminal syndicate network visualization. |
+| `/beat-patrol` | **Protected** | Greedy beat patrol optimizer for station house officers. |
+| `/admin` | **Admin Only** | System Telemetry Console displaying AppSail health, active users, WS links, and storage bytes. |
+
+---
+
+## ☁️ Zoho Catalyst Native Integration Matrix
+
+All 15 Catalyst services are configured and verified with live runtime tests:
+
+- **AppSail** — Managed container runtime serving FastAPI backend (`kaavalai-production-api`).
+- **Slate** — Frontend web hosting (`kaval-ai-bptxfxwh.onslate.in`).
+- **Data Store** — 26 relational ERD SQL tables housing 3,000+ preseeded KSP FIR records.
+- **Authentication** — Hosted SSO Portal link (`/__catalyst/auth/login`) + JWT HS256 role-based security.
+- **Stratus** — File Store managing evidence file uploads (Photos, Videos, Forensic PDFs).
+- **SmartBrowz** — Headless browser engine generating official compiled PDF case reports (`/api/report/generate`).
+- **Functions** — Python 3.9 serverless functions (`nightly_ml_refresh`, `red_zone_alert`, `weekly_summary_report`).
+- **Signals** — Emergency event dispatcher for red-zone crime spikes (`RED_ZONE_CRIME_SPIKE`).
+- **Mail** — Emergency notification trigger (`zcatalyst_sdk.email`).
+- **Cron** — Scheduled nightly ML retraining pipeline (`00:00 UTC`).
+- **API Gateway** — Secure routing, throttling, and CORS origin validation.
+- **WebSockets** — Thread-safe asyncio live event broadcaster (`/ws/updates`).
+
+---
+
+## 🛠️ Local Development & Execution
+
+### 1. Backend (FastAPI)
 ```bash
 cd backend
 pip install -r requirements.txt
-python synthetic_data_generator.py   # Generate 10K synthetic KSP FIRs
-uvicorn main:app --host 0.0.0.0 --port 8000
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
+# → Live API Docs: http://localhost:8000/docs
 ```
 
-### Frontend
+### 2. Frontend (Next.js 14)
 ```bash
 npm install
 npm run dev
-# → http://localhost:3000
+# → Local App Portal: http://localhost:3000
 ```
 
-### Catalyst CLI (for cloud deployment)
+### 3. Automated Verification & Audit Suite
 ```bash
-npm install -g zcatalyst-cli
-catalyst login    # Login with praveen0503k@gmail.com
-catalyst init     # Select KaavalAI-KSP project
-python backend/create_catalyst_tables.py   # Create 15 Data Store tables
-python backend/seed_to_catalyst.py        # Push 10K records to cloud
+cd backend
+python -u run_full_audit.py              # System & ML verification audit
+python -u verify_all_catalyst_services.py # Comprehensive 15-service runtime verification
 ```
 
 ---
 
-## 🤖 ML Engine Endpoints
+## 🔒 Production Hardening Features
 
-| Endpoint | Model | Description |
-|---|---|---|
-| `GET /api/ml/hotspots` | DBSCAN | Spatial crime cluster polygons |
-| `GET /api/ml/forecast` | XGBoost | 30-day daily crime prediction |
-| `GET /api/ml/network-analysis` | NetworkX | PageRank + centrality scores |
-| `POST /api/ml/mo-search` | TF-IDF | MO cosine similarity search |
-| `GET /api/ml/anomalies` | Isolation Forest | Statistical anomaly detection |
-| `GET /api/ml/beat-patrol/{id}` | Greedy Optimizer | Officer patrol allocation |
-| `GET /api/predictive` | Combined | Dashboard summary endpoint |
+- **Rate Limiting Middleware:** Blocks requests exceeding 120 req/min per IP.
+- **Kubernetes Probes:** `/health/liveness` & `/health/readiness` endpoints.
+- **Global Error Handling:** Intercepts unhandled exceptions returning clean JSON error bodies.
+- **Thread-Safe WebSocket Scheduler:** `asyncio.run_coroutine_threadsafe` avoids threadpool event loop crashes.
 
 ---
 
-## ☁️ Catalyst Services Used
-
-- **AppSail** — Managed Docker runtime (Next.js + FastAPI)
-- **Slate** — Static frontend hosting
-- **Data Store** — 15-table relational KSP FIR database
-- **Authentication** — RBAC login (5 officer roles)
-- **API Gateway** — Secure routing + CORS
-- **Signals** — Real-time red-zone alerts
-- **Mail** — Automated emergency notifications
-- **Cron** — Nightly ML model retraining
-- **Cache** — ML result caching
-- **SmartBrowz** — PDF case brief generation
-
----
-
-## 📊 Dataset
-
-Synthetic KSP dataset with 10,000 FIRs across 31 Karnataka districts, based on the official KSP Datathon ERD schema (26 normalized tables).
-
----
-
-*Built for KSP Datathon 2026 · Powered by Zoho Catalyst · Challenge 02*
+*Built for KSP Datathon 2026 · Challenge 02 · Powered by Zoho Catalyst & FastAPI*
