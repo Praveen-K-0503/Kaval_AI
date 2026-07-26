@@ -366,3 +366,8 @@ def get_catalyst_status():
             {"#": 26, "capability": "CI/CD",                                     "service": "Catalyst Pipelines",                        "status": "Active",     "role": "GitHub → auto-deploy to AppSail"},
         ]
     }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+

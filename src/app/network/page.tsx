@@ -1,36 +1,16 @@
 'use client';
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
   ArrowLeft, Search, Network, User, Layers, ChevronRight, RefreshCw, Share2, FileText
 } from 'lucide-react';
-import { CRIMINAL_SYNDICATE_NODES, CriminalNode, RECENT_FIRS } from '@/lib/kspMockData';
+import { API_BASE_URL } from '@/lib/apiConfig';
 
-// FIR-Accused bipartite graph data (FIR nodes = gold squares, Accused = maroon spheres)
-const BIPARTITE_GRAPH = (() => {
-  const nodes: any[] = [];
-  const links: any[] = [];
-  const firSet = new Set<string>();
-  const accusedSet = new Set<string>();
-  RECENT_FIRS.slice(0, 8).forEach(fir => {
-    const firNodeId = `FIR_${fir.firNumber}`;
-    if (!firSet.has(firNodeId)) {
-      nodes.push({ id: firNodeId, label: fir.firNumber, type: 'FIR', district: fir.district, gravity: fir.gravity, color: fir.gravity === 'HEINOUS' ? '#C8960C' : fir.gravity === 'MAJOR' ? '#B87333' : '#D4B896', val: fir.gravity === 'HEINOUS' ? 12 : 8, isFir: true });
-      firSet.add(firNodeId);
-    }
-    fir.accusedNames.forEach((name, i) => {
-      const accId = `ACC_${name.replace(/\s+/g, '_')}`;
-      if (!accusedSet.has(accId)) {
-        nodes.push({ id: accId, label: name, type: 'ACCUSED', color: '#8B1A1A', val: 6, isFir: false });
-        accusedSet.add(accId);
-      }
-      links.push({ source: firNodeId, target: accId, color: fir.gravity === 'HEINOUS' ? '#8B1A1A' : '#C8960C', value: i === 0 ? 3 : 1 });
-    });
-  });
-  return { nodes, links };
-})();
+const API = API_BASE_URL;
+
+// Bipartite graph + syndicate network built from live API data
 
 const ForceGraph3D = dynamic(() => import('react-force-graph-3d'), {
   ssr: false,
@@ -59,28 +39,95 @@ const BADGE_STYLE: Record<string, { bg: string; color: string }> = {
 export default function NetworkPage() {
   const graphRef = useRef<any>(null);
   const [selectedSyndicate, setSelectedSyndicate] = useState<string>('ALL');
-  const [selectedNode, setSelectedNode] = useState<CriminalNode | null>(CRIMINAL_SYNDICATE_NODES[0]);
+  const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'syndicate' | 'bipartite'>('syndicate');
 
-  const graphData = React.useMemo(() => {
-    if (viewMode === 'bipartite') return BIPARTITE_GRAPH;
-    let filtered = CRIMINAL_SYNDICATE_NODES;
+  // ── Live API state ────────────────────────────────────────────────
+  const [networkData, setNetworkData] = useState<{ nodes: any[]; links: any[] }>({ nodes: [], links: [] });
+  const [centralityRanking, setCentralityRanking] = useState<any[]>([]);
+  const [graphLoading, setGraphLoading] = useState(true);
+  const [syndicates, setSyndicates] = useState<{ id: string; label: string }[]>([{ id: 'ALL', label: 'All Syndicates' }]);
+
+  // Fetch bipartite/accused network graph
+  useEffect(() => {
+    setGraphLoading(true);
+    fetch(`${API}/api/network`)
+      .then(r => r.json())
+      .then(d => {
+        const nodes: any[] = (d.nodes ?? []).map((n: any) => ({
+          ...n,
+          color: n.group === 'FIR' ? '#C8960C'
+               : n.group === 'Accused' ? '#8B1A1A'
+               : ROLE_COLORS[n.role] || '#B87333',
+          val: n.group === 'FIR' ? 10 : n.val ?? 6,
+          name: n.name ?? n.label ?? n.id,
+          alias: n.alias ?? '',
+          role: n.role ?? n.group ?? 'ASSOCIATE',
+          syndicate: n.syndicate ?? n.group ?? 'Network',
+          district: n.district ?? 'Karnataka',
+          riskScore: n.risk_score ?? n.riskScore ?? 50,
+          activeCases: n.active_cases ?? n.activeCases ?? 1,
+          status: n.status ?? 'UNDER_SURVEILLANCE',
+          connections: n.connections ?? [],
+          mo: n.mo ?? n.brief_facts ?? 'Organised crime network member',
+        }));
+        const links: any[] = (d.links ?? []).map((l: any) => ({
+          source: l.source,
+          target: l.target,
+          value: l.value ?? 1,
+        }));
+        setNetworkData({ nodes, links });
+        // Build syndicate list from live groups
+        const groups = Array.from(new Set(nodes.map((n: any) => n.syndicate).filter(Boolean))) as string[];
+        setSyndicates([{ id: 'ALL', label: 'All Syndicates' }, ...groups.map(g => ({ id: g, label: g }))]);
+        if (nodes.length > 0) setSelectedNode(nodes[0]);
+      })
+      .catch(() => {})
+      .finally(() => setGraphLoading(false));
+  }, []);
+
+  // Fetch NetworkX centrality ranking from ML endpoint
+  useEffect(() => {
+    fetch(`${API}/api/ml/network-analysis`)
+      .then(r => r.json())
+      .then(d => {
+        const top = d.top_suspects ?? d.key_suspects ?? [];
+        if (top.length > 0) {
+          setCentralityRanking(top.slice(0, 5).map((s: any) => ({
+            id: s.id ?? s.person_id ?? s.node_id,
+            name: s.name ?? s.suspect_name ?? s.id,
+            alias: s.alias ?? '',
+            role: s.role ?? 'OPERATIVE',
+            degree: s.degree_centrality ?? s.degree ?? 0,
+            centrality: Math.round((s.pagerank ?? s.centrality ?? s.betweenness ?? 0) * 100),
+            riskScore: s.risk_score ?? 50,
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const graphData = useMemo(() => {
+    if (viewMode === 'bipartite') {
+      // Show full bipartite network from API
+      return networkData;
+    }
+    // Syndicate-filtered view
+    let filtered = networkData.nodes;
     if (selectedSyndicate !== 'ALL') filtered = filtered.filter(n => n.syndicate === selectedSyndicate);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(n =>
-        n.name.toLowerCase().includes(q) || n.alias.toLowerCase().includes(q) || n.district.toLowerCase().includes(q)
+        (n.name ?? '').toLowerCase().includes(q) ||
+        (n.alias ?? '').toLowerCase().includes(q) ||
+        (n.district ?? '').toLowerCase().includes(q)
       );
     }
-    const ids = new Set(filtered.map(n => n.id));
-    const links: { source: string; target: string; value: number }[] = [];
-    filtered.forEach(n => n.connections.forEach(t => { if (ids.has(t)) links.push({ source: n.id, target: t, value: 2 }); }));
-    return {
-      nodes: filtered.map(n => ({ ...n, color: ROLE_COLORS[n.role] || '#B87333', val: n.role === 'GANG_LEADER' ? 14 : n.role === 'LIEUTENANT' ? 10 : 6 })),
-      links,
-    };
-  }, [selectedSyndicate, searchQuery, viewMode]);
+    const ids = new Set(filtered.map((n: any) => n.id));
+    const links = networkData.links.filter((l: any) => ids.has(l.source) || ids.has(l.target));
+    return { nodes: filtered, links };
+  }, [selectedSyndicate, searchQuery, viewMode, networkData]);
 
   const handleNodeClick = useCallback((node: any) => {
     setSelectedNode(node);
@@ -91,25 +138,7 @@ export default function NetworkPage() {
     }
   }, []);
 
-  const syndicates = [
-    { id: 'ALL',                    label: 'All Syndicates' },
-    { id: 'D-Gang South Syndicate', label: 'D-Gang South' },
-    { id: 'Kaveri Sand Mafia',      label: 'Kaveri Sand Mafia' },
-    { id: 'Cyber Fraud Syndicate',  label: 'Cyber Fraud Ring' },
-  ];
-
-  // Degree centrality: count direct connections for each node
-  const centralityRanking = React.useMemo(() => {
-    return [...CRIMINAL_SYNDICATE_NODES]
-      .map(n => ({
-        ...n,
-        degree: n.connections.length,
-        // Weighted centrality: connections + risk contribution
-        centrality: Math.round((n.connections.length / (CRIMINAL_SYNDICATE_NODES.length - 1)) * 100 * (n.riskScore / 100)),
-      }))
-      .sort((a, b) => b.centrality - a.centrality)
-      .slice(0, 5);
-  }, []);
+  const syndicateList = syndicates;
 
   return (
     <div style={{ minHeight: '100vh', background: '#FBF6EE', display: 'flex', flexDirection: 'column' }}>
@@ -124,7 +153,7 @@ export default function NetworkPage() {
             <Network size={18} style={{ opacity: 0.9, flexShrink: 0 }} /> Criminal Network Analyzer
           </h1>
           <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.65)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-            KSP · Organised Crime Linkage · Bipartite Graph
+            KSP · Organised Crime Linkage · Bipartite Graph · <span style={{ color: '#FDE68A', fontWeight: 800 }}>{networkData.nodes.length} Nodes</span> · <span style={{ color: '#FDE68A', fontWeight: 800 }}>{networkData.links.length} Links</span> · LIVE
           </p>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -195,7 +224,7 @@ export default function NetworkPage() {
           {viewMode === 'syndicate' && <div>
             <div className="section-heading" style={{ marginBottom: '8px' }}>Criminal Syndicate</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {syndicates.map(s => {
+              {syndicateList.map(s => {
                 const active = selectedSyndicate === s.id;
                 return (
                   <button key={s.id} onClick={() => setSelectedSyndicate(s.id)} style={{
@@ -308,6 +337,13 @@ export default function NetworkPage() {
 
         {/* Right 3D Graph Canvas */}
         <div style={{ position: 'relative', background: '#FBF6EE' }}>
+          {graphLoading && (
+            <div style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#FBF6EE', gap: '14px' }}>
+              <div style={{ width: '44px', height: '44px', border: '4px solid #F2E8D9', borderTopColor: '#8B1A1A', borderRadius: '50%', animation: 'spinSlow 0.9s linear infinite' }} />
+              <span style={{ fontSize: '13px', color: '#9B7560', fontWeight: 600 }}>Loading Live Criminal Network…</span>
+              <span style={{ fontSize: '11px', color: '#D4B896' }}>NetworkX · {networkData.nodes.length} nodes fetched</span>
+            </div>
+          )}
           <ForceGraph3D
             ref={graphRef}
             graphData={graphData}

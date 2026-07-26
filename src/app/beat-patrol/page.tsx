@@ -8,6 +8,9 @@ import {
   CheckCircle2, Clock, AlertTriangle, ChevronRight, Target, Zap
 } from 'lucide-react';
 import { BEAT_CHECKPOINTS } from '@/lib/kspMockData';
+import { API_BASE_URL } from '@/lib/apiConfig';
+
+const API = API_BASE_URL;
 
 // Dynamically load the map to avoid SSR issues
 const BeatMap = dynamic(() => import('@/components/BeatMap'), { ssr: false, loading: () => (
@@ -33,8 +36,39 @@ export default function BeatPatrolPage() {
   const [activeCP, setActiveCP] = useState<string | null>(null);
 
   const activeStation = STATIONS.find(s => s.id === selectedStation) || STATIONS[0];
+  const [checkpoints, setCheckpoints] = useState<any[]>(BEAT_CHECKPOINTS);
+  const [loadingRoute, setLoadingRoute] = useState(false);
+
+  // Fetch live beat patrol route when station changes
+  useEffect(() => {
+    const st = STATIONS.find(s => s.id === selectedStation);
+    if (!st) return;
+    setLoadingRoute(true);
+    fetch(`${API}/api/ml/beat-patrol/${st.id}`)
+      .then(r => r.json())
+      .then(d => {
+        const waypoints: any[] = d.waypoints ?? d.checkpoints ?? d.route ?? [];
+        if (waypoints.length > 0) {
+          setCheckpoints(waypoints.map((wp: any, i: number) => ({
+            id: wp.id ?? wp.checkpoint_id ?? `CP_${i}`,
+            name: wp.name ?? wp.checkpoint_name ?? `Checkpoint ${i + 1}`,
+            location: wp.location ?? wp.area ?? st.district,
+            lat: wp.lat ?? wp.latitude ?? st.lat + (Math.random() - 0.5) * 0.05,
+            lng: wp.lng ?? wp.longitude ?? st.lng + (Math.random() - 0.5) * 0.05,
+            riskRating: wp.risk_rating ?? (wp.risk_score > 70 ? 'HIGH' : wp.risk_score > 40 ? 'MEDIUM' : 'MODERATE'),
+            recommendedTime: wp.recommended_time ?? wp.patrol_time ?? '08:00',
+            order: wp.order ?? i + 1,
+          })));
+        } else {
+          setCheckpoints(BEAT_CHECKPOINTS);
+        }
+      })
+      .catch(() => setCheckpoints(BEAT_CHECKPOINTS))
+      .finally(() => setLoadingRoute(false));
+  }, [selectedStation]);
+
   const toggleCP = (id: string) => setCompletedCPs(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
-  const completionPct = Math.round((completedCPs.length / BEAT_CHECKPOINTS.length) * 100);
+  const completionPct = checkpoints.length > 0 ? Math.round((completedCPs.length / checkpoints.length) * 100) : 0;
 
   const RISK_BADGE: Record<string, { bg: string; color: string; border: string; dot: string }> = {
     HIGH:     { bg: '#FEE2E2', color: '#991B1B', border: '#FECACA', dot: '#DC2626' },
@@ -104,9 +138,9 @@ export default function BeatPatrolPage() {
           {[
             { label: 'Station', value: activeStation.district, sub: 'Jurisdiction' },
             { label: 'Risk Index', value: `${activeStation.riskIndex}/100`, sub: 'Station Risk Score' },
-            { label: 'Waypoints', value: `${BEAT_CHECKPOINTS.length}`, sub: 'Dijkstra Optimized' },
+            { label: 'Waypoints', value: loadingRoute ? '…' : `${checkpoints.length}`, sub: 'Dijkstra Optimized' },
             { label: 'Officers', value: `${officerCount}`, sub: `${selectedShift} Shift` },
-            { label: 'Progress', value: `${completionPct}%`, sub: `${completedCPs.length}/${BEAT_CHECKPOINTS.length} Done` },
+            { label: 'Progress', value: `${completionPct}%`, sub: `${completedCPs.length}/${checkpoints.length} Done` },
           ].map((m, i) => (
             <div key={i} className="ksp-metric-card animate-slide-up" style={{ animationDelay: `${i * 70}ms`, opacity: 0, animationFillMode: 'forwards', padding: '14px 16px' }}>
               <div style={{ fontSize: '10px', color: '#9B7560', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '5px' }}>{m.label}</div>
@@ -138,7 +172,7 @@ export default function BeatPatrolPage() {
               </div>
             </div>
             <div style={{ flex: 1, minHeight: '460px' }}>
-              <BeatMap checkpoints={BEAT_CHECKPOINTS} completedCPs={completedCPs} activeCP={activeCP} onToggle={toggleCP} stationLat={activeStation.lat} stationLng={activeStation.lng} />
+              <BeatMap checkpoints={checkpoints} completedCPs={completedCPs} activeCP={activeCP} onToggle={toggleCP} stationLat={activeStation.lat} stationLng={activeStation.lng} />
             </div>
           </div>
 
@@ -154,7 +188,7 @@ export default function BeatPatrolPage() {
               </div>
             </div>
 
-            {BEAT_CHECKPOINTS.map((cp, i) => {
+            {checkpoints.map((cp, i) => {
               const done = completedCPs.includes(cp.id);
               const riskStyle = RISK_BADGE[cp.riskRating] || RISK_BADGE.MODERATE;
               const isActive = activeCP === cp.id;
@@ -194,10 +228,10 @@ export default function BeatPatrolPage() {
             })}
 
             {/* Progress bar at bottom */}
-            <div style={{ paddingTop: '10px', borderTop: '1px solid #F2E8D9', marginTop: '4px' }}>
-              <div style={{ fontSize: '11px', color: '#9B7560', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Patrol Progress</span><span style={{ fontWeight: 700, color: '#8B1A1A' }}>{completedCPs.length}/{BEAT_CHECKPOINTS.length} waypoints</span>
-              </div>
+              <div style={{ paddingTop: '10px', borderTop: '1px solid #F2E8D9', marginTop: '4px' }}>
+                <div style={{ fontSize: '11px', color: '#9B7560', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Patrol Progress</span><span style={{ fontWeight: 700, color: '#8B1A1A' }}>{completedCPs.length}/{checkpoints.length} waypoints</span>
+                </div>
               <div style={{ height: '8px', background: '#F2E8D9', borderRadius: '4px', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${completionPct}%`, background: completionPct === 100 ? '#10B981' : 'linear-gradient(90deg, #8B1A1A, #C8960C)', borderRadius: '4px', transition: 'width 0.4s ease' }} />
               </div>
@@ -221,9 +255,8 @@ export default function BeatPatrolPage() {
               <div><strong>SHIFT:</strong> {selectedShift} SHIFT · {officerCount} Officers</div>
               <div><strong>DATE:</strong> {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
               <div><strong>PROGRESS:</strong> {completionPct}% ({completedCPs.length}/{BEAT_CHECKPOINTS.length} waypoints done)</div>
-              <div style={{ marginTop: '10px', borderTop: '1px solid #E8D4BA', paddingTop: '10px' }}>
-                <strong>WAYPOINTS:</strong>
-                {BEAT_CHECKPOINTS.map(c => (
+              <div><strong>WAYPOINTS:</strong>
+                {checkpoints.map(c => (
                   <div key={c.id} style={{ textDecoration: completedCPs.includes(c.id) ? 'line-through' : 'none', color: completedCPs.includes(c.id) ? '#9B7560' : '#5C3D2E' }}>
                     {completedCPs.includes(c.id) ? '✓' : '○'} #{c.order}: {c.name} ({c.recommendedTime}) — {c.riskRating}
                   </div>

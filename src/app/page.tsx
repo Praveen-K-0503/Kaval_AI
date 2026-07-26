@@ -12,7 +12,6 @@ import Map3D from '@/components/Map3D';
 import NetworkGraph3D from '@/components/NetworkGraph3D';
 import PredictiveDashboard from '@/components/PredictiveDashboard';
 import CatalystDrawer from '@/components/CatalystDrawer';
-import { KSP_DISTRICTS } from '@/lib/kspMockData';
 import { API_BASE_URL } from '@/lib/apiConfig';
 
 const API = API_BASE_URL;
@@ -117,46 +116,89 @@ const QuickLink = ({ href, icon, label, desc, accent, badge }: { href: string; i
   </Link>
 );
 
+// ── Fallback values shown while API loads ────────────────────────────────
+const KPI_FALLBACK = {
+  total_firs: 0, heinous_crimes: 0, total_accused: 0,
+  total_stations: 0, active_red_zones: 0,
+  repeat_offender_clusters: 0, predictive_risk_index: 0,
+};
+
+const PREDICTIVE_FALLBACK = {
+  forecast_period: 'Next 30 Days (FY 2025-26)',
+  model: 'XGBoost + Isolation Forest (Hybrid Ensemble)',
+  model_confidence: '—',
+  high_risk_districts: [] as any[],
+  anomalies: [] as any[],
+};
+
 export default function Home() {
   const [catalystOpen, setCatalystOpen] = useState(false);
   const [activeRole, setActiveRole] = useState('SCRB Director');
   const [searchQuery, setSearchQuery] = useState('');
   const [leftTab, setLeftTab] = useState<'MAP' | 'CLOCK'>('MAP');
 
-  const kpi = {
-    total_firs: 8420,
-    heinous_crimes: 312,
-    total_accused: 2890,
-    total_stations: 108,
-    active_red_zones: 5,
-    repeat_offender_clusters: 28,
-    predictive_risk_index: 84.6,
-  };
+  // ── Live API state ──────────────────────────────────────────────────────
+  const [kpi, setKpi] = useState(KPI_FALLBACK);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [predictiveData, setPredictiveData] = useState(PREDICTIVE_FALLBACK);
+  const [apiStatus, setApiStatus] = useState<'loading' | 'connected' | 'error'>('loading');
 
-  const districts = KSP_DISTRICTS.map(d => ({
-    district_id: d.id, district_name: d.name,
-    lat: d.lat, lng: d.lng,
-    crime_count: d.totalFirs, risk_score: d.riskScore,
-    is_red_zone: d.riskCategory === 'CRITICAL' || d.riskCategory === 'HIGH',
-    recommended_beat_patrols: Math.round(d.riskScore * 0.4),
-  }));
+  useEffect(() => {
+    const API = API_BASE_URL;
 
-  const predictiveData = {
-    forecast_period: 'Next 30 Days (FY 2025-26)',
-    model: 'XGBoost + Isolation Forest (Hybrid Ensemble)',
-    model_confidence: '94.8%',
-    high_risk_districts: KSP_DISTRICTS.filter(d => d.riskCategory === 'CRITICAL').map(d => ({
-      district: d.name,
-      predicted_crimes: Math.round(d.totalFirs * 0.05),
-      risk_level: `${d.riskCategory} (Red Zone)`,
-      primary_threat: d.topOffence,
-    })),
-    anomalies: [
-      { anomaly_id: 'ANO_01', district: 'Bengaluru City', severity: 'CRITICAL', description: 'Night vault robbery spike +340%', recommended_action: 'Deploy 4 Addl Patrol Vehicles', crime_count: 42, heinous_count: 8, risk_score: 94 },
-      { anomaly_id: 'ANO_02', district: 'Kalaburagi', severity: 'HIGH', description: 'Arm extortion near sand transport routes', recommended_action: 'Set up Highway Checkpost', crime_count: 31, heinous_count: 5, risk_score: 91 },
-      { anomaly_id: 'ANO_03', district: 'Mangaluru City (DK)', severity: 'ELEVATED', description: 'WhatsApp APK phishing mule accounts surge', recommended_action: 'Freeze Mule Accounts', crime_count: 28, heinous_count: 2, risk_score: 88 },
-    ],
-  };
+    // 1. Fetch live KPI
+    fetch(`${API}/api/kpi`)
+      .then(r => r.json())
+      .then(d => {
+        setKpi(d);
+        setApiStatus('connected');
+      })
+      .catch(() => setApiStatus('error'));
+
+    // 2. Fetch districts
+    fetch(`${API}/api/districts`)
+      .then(r => r.json())
+      .then(d => {
+        const rows: any[] = d.districts || d;
+        setDistricts(rows.map((dist: any) => ({
+          district_id: dist.district_id ?? dist.DistrictID ?? dist.id,
+          district_name: dist.district_name ?? dist.DistrictName ?? dist.name,
+          lat: dist.lat ?? dist.latitude ?? 13.9,
+          lng: dist.lng ?? dist.longitude ?? 75.8,
+          crime_count: dist.crime_count ?? dist.totalFirs ?? 0,
+          risk_score: dist.risk_score ?? dist.riskScore ?? 0,
+          is_red_zone: dist.is_red_zone ?? dist.riskCategory === 'CRITICAL',
+          recommended_beat_patrols: dist.recommended_beat_patrols ?? Math.round((dist.risk_score ?? 0) * 0.4),
+        })));
+      })
+      .catch(() => {});
+
+    // 3. Fetch ML forecast for predictive panel
+    fetch(`${API}/api/ml/forecast?days=30`)
+      .then(r => r.json())
+      .then(forecast => {
+        fetch(`${API}/api/ml/anomalies`)
+          .then(r => r.json())
+          .then(anom => {
+            setPredictiveData({
+              forecast_period: forecast.forecast_period ?? 'Next 30 Days (FY 2025-26)',
+              model: forecast.model ?? 'XGBoost + Isolation Forest (Hybrid Ensemble)',
+              model_confidence: forecast.model_accuracy ? `${(forecast.model_accuracy * 100).toFixed(1)}%` : '94.8%',
+              high_risk_districts: forecast.high_risk_districts ?? [],
+              anomalies: anom.anomalies ?? anom ?? [],
+            });
+          })
+          .catch(() => {
+            setPredictiveData(prev => ({
+              ...prev,
+              forecast_period: forecast.forecast_period ?? prev.forecast_period,
+              model: forecast.model ?? prev.model,
+              high_risk_districts: forecast.high_risk_districts ?? [],
+            }));
+          });
+      })
+      .catch(() => {});
+  }, []);
 
   const catalystServices = [
     { name: 'Catalyst AppSail', status: 'Active', type: 'Managed Python & Next.js OCI Containers' },
@@ -206,10 +248,10 @@ export default function Home() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '11px', opacity: 0.9 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={13} style={{ color: '#FFD700' }} />
-            XGBoost ML Accuracy: <strong style={{ color: '#FFD700' }}>94.8%</strong>
+            XGBoost ML Accuracy: <strong style={{ color: '#FFD700' }}>{predictiveData.model_confidence}</strong>
           </span>
           <span>|</span>
-          <span style={{ color: '#F2E8D9' }}>Catalyst Cloud Sync: <strong style={{ color: '#6EE7B7' }}>Connected</strong></span>
+          <span style={{ color: '#F2E8D9' }}>Catalyst Cloud Sync: <strong style={{ color: apiStatus === 'connected' ? '#6EE7B7' : apiStatus === 'loading' ? '#FFD700' : '#FCA5A5' }}>{apiStatus === 'connected' ? 'Connected' : apiStatus === 'loading' ? 'Connecting…' : 'Offline — Local Mode'}</strong></span>
         </div>
       </div>
 
@@ -265,14 +307,14 @@ export default function Home() {
           </div>
         </div>
 
-        {/* KPI Metric Cards */}
+        {/* KPI Metric Cards — live from /api/kpi */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-          <MetricCard label="Total FIRs Registered" value={8420} sublabel="FY 2025-26 · All 31 Districts" icon={<FileText size={20} />} color="#8B1A1A" trend="+4.2% YoY" trendPositive={false} delay={0} />
-          <MetricCard label="Heinous Offences" value={312} sublabel="Active Investigations" icon={<ShieldAlert size={20} />} color="#DC2626" trend="-1.8% MoM" trendPositive={true} delay={60} />
-          <MetricCard label="Active Accused" value={2890} sublabel="In 224 Active Cases" icon={<Users size={20} />} color="#C8960C" trend="289 Tagged" trendPositive={true} delay={120} />
-          <MetricCard label="Police Stations" value={108} sublabel="Bengaluru City Range" icon={<MapPin size={20} />} color="#2D5016" trend="100% Operational" trendPositive={true} delay={180} />
-          <MetricCard label="Active Red Zones" value={5} sublabel="CRITICAL Risk Districts" icon={<AlertTriangle size={20} />} color="#DC2626" trend="Priority 1" trendPositive={false} delay={240} />
-          <MetricCard label="Predictive Risk Index" value="84.6%" sublabel="XGBoost Confidence: 94.8%" icon={<Activity size={20} />} color="#B87333" trend="Stable" trendPositive={true} delay={300} />
+          <MetricCard label="Total FIRs Registered" value={kpi.total_firs || '—'} sublabel="FY 2025-26 · All 31 Districts" icon={<FileText size={20} />} color="#8B1A1A" trend={kpi.total_firs ? '+Live' : 'Loading…'} trendPositive={false} delay={0} />
+          <MetricCard label="Heinous Offences" value={kpi.heinous_crimes || '—'} sublabel="Active Investigations" icon={<ShieldAlert size={20} />} color="#DC2626" trend={kpi.heinous_crimes ? 'Live' : '…'} trendPositive={true} delay={60} />
+          <MetricCard label="Active Accused" value={kpi.total_accused || '—'} sublabel="All Active Cases" icon={<Users size={20} />} color="#C8960C" trend={kpi.total_accused ? 'Live' : '…'} trendPositive={true} delay={120} />
+          <MetricCard label="Police Stations" value={kpi.total_stations || '—'} sublabel="Karnataka Coverage" icon={<MapPin size={20} />} color="#2D5016" trend={kpi.total_stations ? 'Operational' : '…'} trendPositive={true} delay={180} />
+          <MetricCard label="Active Red Zones" value={kpi.active_red_zones || '—'} sublabel="CRITICAL Risk Districts" icon={<AlertTriangle size={20} />} color="#DC2626" trend={kpi.active_red_zones ? 'Priority 1' : '…'} trendPositive={false} delay={240} />
+          <MetricCard label="Predictive Risk Index" value={kpi.predictive_risk_index ? `${kpi.predictive_risk_index}%` : '—'} sublabel={`Model Confidence: ${predictiveData.model_confidence}`} icon={<Activity size={20} />} color="#B87333" trend={apiStatus === 'connected' ? 'Live' : apiStatus === 'loading' ? 'Loading…' : 'Offline'} trendPositive={apiStatus === 'connected'} delay={300} />
         </div>
 
         {/* Quick Navigation Cards Row */}
