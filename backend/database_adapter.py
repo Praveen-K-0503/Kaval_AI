@@ -436,18 +436,26 @@ class KSPDatabaseAdapter:
     """
 
     def __init__(self):
+        try:
+            self._sqlite_backend = SQLiteBackend()
+            self._backend = self._sqlite_backend
+            self._mode = "sqlite"
+        except Exception as e:
+            print(f"CRITICAL: Failed to initialize local SQLite database: {e}")
+            self._sqlite_backend = None
+            self._backend = None
+            self._mode = "offline"
+
         if USE_CATALYST:
             try:
                 self._backend = CatalystBackend()
                 self._mode = "catalyst"
                 logger.info("[KSPAdapter] ✅ Using Catalyst Data Store (production mode)")
             except Exception as e:
-                logger.warning(f"[KSPAdapter] Catalyst failed ({e}) — falling back to SQLite")
-                self._backend = SQLiteBackend()
+                print(f"WARNING: Catalyst Data Store connection failed ({e}). Falling back to SQLite.", flush=True)
+                self._backend = self._sqlite_backend
                 self._mode = "sqlite_fallback"
         else:
-            self._backend = SQLiteBackend()
-            self._mode = "sqlite"
             logger.info("[KSPAdapter] 📂 Using SQLite (local development mode)")
 
     @property
@@ -455,34 +463,64 @@ class KSPDatabaseAdapter:
         return self._mode
 
     def get_kpi_summary(self) -> Dict[str, Any]:
-        return self._backend.get_kpi_summary()
+        try:
+            return self._backend.get_kpi_summary()
+        except Exception as e:
+            logger.warning(f"[KSPAdapter] KPI summary failed ({e}) — falling back to SQLite")
+            return self._sqlite_backend.get_kpi_summary()
 
     def search_firs(self, district_id=None, gravity_id=None, search_query=None, limit=50):
-        return self._backend.search_firs(district_id, gravity_id, search_query, limit)
+        try:
+            return self._backend.search_firs(district_id, gravity_id, search_query, limit)
+        except Exception as e:
+            logger.warning(f"[KSPAdapter] search_firs failed ({e}) — falling back to SQLite")
+            return self._sqlite_backend.search_firs(district_id, gravity_id, search_query, limit)
 
     def get_fir_details(self, case_master_id: int):
-        return self._backend.get_fir_details(case_master_id)
+        try:
+            return self._backend.get_fir_details(case_master_id)
+        except Exception as e:
+            logger.warning(f"[KSPAdapter] get_fir_details failed ({e}) — falling back to SQLite")
+            return self._sqlite_backend.get_fir_details(case_master_id)
 
     def get_district_analytics(self):
-        return self._backend.get_district_analytics()
+        try:
+            return self._backend.get_district_analytics()
+        except Exception as e:
+            logger.warning(f"[KSPAdapter] get_district_analytics failed ({e}) — falling back to SQLite")
+            return self._sqlite_backend.get_district_analytics()
 
     def get_criminal_network(self, limit=100):
-        return self._backend.get_criminal_network(limit)
+        try:
+            return self._backend.get_criminal_network(limit)
+        except Exception as e:
+            logger.warning(f"[KSPAdapter] get_criminal_network failed ({e}) — falling back to SQLite")
+            return self._sqlite_backend.get_criminal_network(limit)
 
     def get_crime_timeline(self, district_id=None):
-        return self._backend.get_crime_timeline(district_id)
+        try:
+            return self._backend.get_crime_timeline(district_id)
+        except Exception as e:
+            logger.warning(f"[KSPAdapter] get_crime_timeline failed ({e}) — falling back to SQLite")
+            return self._sqlite_backend.get_crime_timeline(district_id)
 
     def query_all(self, query: str, params: tuple = ()) -> List[Dict]:
         """Raw SQL — SQLite only (dev). Returns [] in Catalyst mode."""
         if hasattr(self._backend, "query_all"):
-            return self._backend.query_all(query, params)
-        return []
+            try:
+                return self._backend.query_all(query, params)
+            except Exception:
+                pass
+        return self._sqlite_backend.query_all(query, params)
 
     def query_one(self, query: str, params: tuple = ()) -> Optional[Dict]:
         """Raw SQL — SQLite only (dev). Returns None in Catalyst mode."""
         if hasattr(self._backend, "query_one"):
-            return self._backend.query_one(query, params)
-        return None
+            try:
+                return self._backend.query_one(query, params)
+            except Exception:
+                pass
+        return self._sqlite_backend.query_one(query, params)
 
 
 # ── Singleton ─────────────────────────────────────────────────────────────

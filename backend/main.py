@@ -28,26 +28,54 @@ Backend Mode:
   CATALYST_ENV=production  → Zoho Catalyst Data Store
 """
 
+import sys
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Query, HTTPException, Body
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from typing import Optional, Dict, Any
-from dotenv import load_dotenv
 
-load_dotenv()
+# Default CATALYST_ENV to "production" if not set, and warn
+if not os.getenv("CATALYST_ENV"):
+    print("WARNING: CATALYST_ENV is not set. Defaulting to 'production' environment.", flush=True)
+    os.environ["CATALYST_ENV"] = "production"
 
-from mcp_server import router as mcp_router
-from database_adapter import db_adapter
+print("KaavalAI Backend starting on port 8000...", flush=True)
+
+try:
+    from fastapi import FastAPI, Query, HTTPException, Body
+    from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.responses import JSONResponse
+    from typing import Optional, Dict, Any
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except Exception as e:
+    print(f"CRITICAL: Failed to import FastAPI or Core libs: {e}", file=sys.stderr, flush=True)
+    sys.exit(1)
+
+# Failsafe imports for custom modules
+db_adapter = None
+mcp_router = None
+catalyst_engine = None
+ml_engine = None
+
+try:
+    from database_adapter import db_adapter
+except Exception as e:
+    print(f"WARNING: Error importing database_adapter: {e}", flush=True)
+
+try:
+    from mcp_server import router as mcp_router
+except Exception as e:
+    print(f"WARNING: Error importing mcp_server: {e}", flush=True)
+
 try:
     from catalyst_client import catalyst_engine
 except Exception as e:
-    catalyst_engine = None
+    print(f"WARNING: Error importing catalyst_client: {e}", flush=True)
+
 try:
     from ml_engine import ml_engine
 except Exception as e:
-    ml_engine = None
+    print(f"WARNING: Error importing ml_engine: {e}", flush=True)
 
 
 # ── Startup Lifespan (model warm-up) ─────────────────────────────────
@@ -56,14 +84,18 @@ async def lifespan(app: FastAPI):
     """Warm up ML models when the server starts."""
     import logging
     logger = logging.getLogger(__name__)
-    logger.info("[Startup] Warming up KSP ML Engine...")
-    try:
-        ml_engine.warm_up()
-        logger.info("[Startup] ✅ ML Engine ready.")
-    except Exception as e:
-        logger.warning(f"[Startup] ML warm-up skipped: {e}")
+    if ml_engine is not None:
+        logger.info("[Startup] Warming up KSP ML Engine...")
+        try:
+            ml_engine.warm_up()
+            logger.info("[Startup] ✅ ML Engine ready.")
+        except Exception as e:
+            logger.warning(f"[Startup] ML warm-up failed: {e}")
+    else:
+        logger.warning("[Startup] ML Engine not available. Skipping warm-up.")
     yield
     logger.info("[Shutdown] KaavalAI KSP API shutting down.")
+
 
 # ── CORS Setup ────────────────────────────────────────────────────────────
 origins = [
@@ -96,7 +128,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(mcp_router)
+if mcp_router is not None:
+    app.include_router(mcp_router)
 
 
 # ── Root & Health ─────────────────────────────────────────────────────────
@@ -107,9 +140,9 @@ def root():
         "status": "online",
         "system": "KaavalAI KSP Command Suite",
         "version": "2.0.0",
-        "database_mode": db_adapter.mode,
+        "database_mode": db_adapter.mode if db_adapter else "offline",
         "catalyst_appsail": "healthy",
-        "catalyst_env": os.getenv("CATALYST_ENV", "local"),
+        "catalyst_env": os.getenv("CATALYST_ENV", "production"),
         "endpoints": {
             "kpi": "/api/kpi",
             "districts": "/api/districts",
