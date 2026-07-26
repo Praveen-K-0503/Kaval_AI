@@ -82,10 +82,15 @@ except Exception as e:
     print(f"WARNING: Error importing ml_engine: {e}", flush=True)
 
 
+main_loop = None
+
+
 # ── Startup Lifespan (model warm-up) ─────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Warm up ML models when the server starts."""
+    global main_loop
+    main_loop = asyncio.get_running_loop()
     import logging
     logger = logging.getLogger(__name__)
     if ml_engine is not None:
@@ -163,13 +168,15 @@ ws_manager = ConnectionManager()
 def trigger_broadcast(event_type: str, data: dict):
     message = {"event": event_type, "data": data}
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            loop.create_task(ws_manager.broadcast(message))
+        if main_loop is not None:
+            asyncio.run_coroutine_threadsafe(ws_manager.broadcast(message), main_loop)
         else:
-            loop.run_until_complete(ws_manager.broadcast(message))
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(ws_manager.broadcast(message))
+            else:
+                loop.run_until_complete(ws_manager.broadcast(message))
     except Exception:
-        # Failsafe if event loop is not initialized
         pass
 
 @app.websocket("/ws/updates")
