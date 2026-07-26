@@ -369,7 +369,7 @@ class KSPMLEngine:
                 for i, r in enumerate(top_ringleaders)
             ],
             "nodes": nodes[:limit],
-            "links": links[:limit * 3],
+            "links": [l for l in links if l["source"] in {n["id"] for n in nodes[:limit]} and l["target"] in {n["id"] for n in nodes[:limit]}],
         }
 
     def _build_network_graph(self, db_adapter, limit: int = 200):
