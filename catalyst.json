@@ -12,6 +12,9 @@
       "weekly_summary_report"
     ]
   },
+  "appsail": {
+    "source": "backend"
+  },
   "defaults": { "project": 1, "env": 1 },
   "actives": { "project": 1, "env": 1 },
   "projects": [
