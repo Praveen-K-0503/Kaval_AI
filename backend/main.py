@@ -32,6 +32,10 @@ import sys
 import os
 from contextlib import asynccontextmanager
 
+# Map KSP_ENV to CATALYST_ENV if provided (bypasses Catalyst reserved prefix restriction)
+if os.getenv("KSP_ENV"):
+    os.environ["CATALYST_ENV"] = os.getenv("KSP_ENV")
+
 # Default CATALYST_ENV to "production" if not set, and warn
 if not os.getenv("CATALYST_ENV"):
     print("WARNING: CATALYST_ENV is not set. Defaulting to 'production' environment.", flush=True)

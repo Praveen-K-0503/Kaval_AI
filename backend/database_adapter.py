@@ -19,7 +19,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # ── Backend Detection ──────────────────────────────────────────────────────
-CATALYST_ENV = os.getenv("CATALYST_ENV", "local")
+CATALYST_ENV = os.getenv("KSP_ENV") or os.getenv("CATALYST_ENV") or "local"
 USE_CATALYST = CATALYST_ENV == "production"
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "ksp_database.db")
