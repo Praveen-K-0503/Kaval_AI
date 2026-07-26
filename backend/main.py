@@ -108,6 +108,8 @@ async def lifespan(app: FastAPI):
 
 # ── CORS Setup ────────────────────────────────────────────────────────────
 origins = [
+    "https://kaval-ai-bptxfxwh.onslate.in",
+    "https://kaaval-ai-ksp-kpkgmkzf.onslate.in",
     "https://kaaval-ai-ksp-wsdrynhd.onslate.in",
     "https://kaaval-ai-ksp-ztlyubla.onslate.in",
     "http://localhost:3000",
@@ -132,6 +134,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.onslate\.in",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
