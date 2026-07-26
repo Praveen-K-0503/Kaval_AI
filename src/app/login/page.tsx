@@ -223,6 +223,27 @@ export default function LoginPage() {
           >
             {loading ? '🔐 Authenticating...' : '🔐 Secure Login'}
           </button>
+
+          <a
+            href="https://kaavalai-ksp-60080028417.development.catalystserverless.in/__catalyst/auth/login"
+            style={{
+              width: '100%', padding: '12px',
+              background: '#ffffff',
+              color: '#1D4ED8', border: '1px solid #1D4ED8', borderRadius: '8px',
+              fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+              marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              textDecoration: 'none', gap: '8px', boxSizing: 'border-box',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = '#eff6ff';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = '#ffffff';
+            }}
+          >
+            🔑 Login with Catalyst Single Sign-On
+          </a>
         </form>
 
         {/* Demo note */}
