@@ -65,6 +65,19 @@ async def lifespan(app: FastAPI):
     yield
     logger.info("[Shutdown] KaavalAI KSP API shutting down.")
 
+# ── CORS Setup ────────────────────────────────────────────────────────────
+origins = [
+    "https://kaaval-ai-ksp-wsdrynhd.onslate.in",
+    "https://kaaval-ai-ksp-ztlyubla.onslate.in",
+    "http://localhost:3000",
+]
+origins_env = os.getenv("CORS_ORIGINS")
+if origins_env:
+    for o in origins_env.split(","):
+        o_clean = o.strip()
+        if o_clean and o_clean != "*" and o_clean not in origins:
+            origins.append(o_clean)
+
 # ── App Init ──────────────────────────────────────────────────────────────
 app = FastAPI(
     title="KaavalAI KSP Command API",
@@ -75,18 +88,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.include_router(mcp_router)
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.include_router(mcp_router)
 
-# ── Root ──────────────────────────────────────────────────────────────────
+
+# ── Root & Health ─────────────────────────────────────────────────────────
 
 @app.get("/")
 def root():
@@ -106,6 +119,11 @@ def root():
             "docs": "/docs",
         }
     }
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "kaavalai-api"}
 
 
 # ── Core Data Endpoints ───────────────────────────────────────────────────
@@ -366,6 +384,96 @@ def get_catalyst_status():
             {"#": 26, "capability": "CI/CD",                                     "service": "Catalyst Pipelines",                        "status": "Active",     "role": "GitHub → auto-deploy to AppSail"},
         ]
     }
+
+@app.get("/api/dispatch")
+def get_live_dispatch():
+    """Live emergency dispatch feed for KSP active events."""
+    return {
+        "dispatches": [
+            {
+                "dispatch_id": "DSP-9402",
+                "incident_type": "IPC 395 (Dacoity / Armed Robbery)",
+                "location": "Bengaluru City — Subhedar Chatra PS Sector 3",
+                "lat": 12.9782,
+                "lng": 77.5702,
+                "reported_ago": "2 mins ago",
+                "severity": "CRITICAL",
+                "status": "PENDING"
+            },
+            {
+                "dispatch_id": "DSP-9403",
+                "incident_type": "IPC 379 (Vehicle Theft - Pulsar 150)",
+                "location": "Kalaburagi — Brahmapur PS jurisdiction",
+                "lat": 17.3312,
+                "lng": 76.8323,
+                "reported_ago": "8 mins ago",
+                "severity": "MAJOR",
+                "status": "DISPATCHED"
+            },
+            {
+                "dispatch_id": "DSP-9404",
+                "incident_type": "IPC 324 (Voluntarily Causing Hurt by Dangerous Weapons)",
+                "location": "Mangaluru — Pandeshwar PS main road",
+                "lat": 12.8712,
+                "lng": 74.8415,
+                "reported_ago": "15 mins ago",
+                "severity": "MAJOR",
+                "status": "PENDING"
+            },
+            {
+                "dispatch_id": "DSP-9405",
+                "incident_type": "IPC 420 (UPI Online Phishing Scam)",
+                "location": "Mysuru — Lashkar PS jurisdiction",
+                "lat": 12.2982,
+                "lng": 76.6374,
+                "reported_ago": "24 mins ago",
+                "severity": "MINOR",
+                "status": "CLOSED"
+            }
+        ]
+    }
+
+
+@app.get("/api/audit-logs")
+def get_audit_logs():
+    """Security audit logs for KSP data access compliance."""
+    return {
+        "logs": [
+            {
+                "timestamp": "16:11:02",
+                "officer": "praveen0503k@gmail.com",
+                "role": "SCRB Chief",
+                "action": "Ran TF-IDF MO Similarity Match on query 'ATM Robbery'",
+                "ip": "10.142.0.4",
+                "status": "ALLOWED"
+            },
+            {
+                "timestamp": "16:08:44",
+                "officer": "range.ig@ksp.gov.in",
+                "role": "Range IG",
+                "action": "Generated SmartBrief PDF for CaseMasterID: 3000",
+                "ip": "10.142.12.98",
+                "status": "ALLOWED"
+            },
+            {
+                "timestamp": "16:04:19",
+                "officer": "sho.subhedar@ksp.gov.in",
+                "role": "SHO",
+                "action": "Generated Dijkstra Route via Beat Patrol Optimizer",
+                "ip": "10.145.4.11",
+                "status": "ALLOWED"
+            },
+            {
+                "timestamp": "15:58:33",
+                "officer": "analyst@ksp.gov.in",
+                "role": "Crime Analyst",
+                "action": "Queried Criminal Syndicate network graph (256 nodes)",
+                "ip": "10.142.0.8",
+                "status": "ALLOWED"
+            }
+        ]
+    }
+
 
 if __name__ == "__main__":
     import uvicorn
